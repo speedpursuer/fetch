@@ -109,7 +109,9 @@ class ImageFinder
                 if($response)
                 {
                         libxml_use_internal_errors(true);
-                        $document->loadHTML($response);
+                        $searchPage = mb_convert_encoding($response, 'HTML-ENTITIES', "gb2312");
+                        $document->loadHTML($searchPage);                        
+                       	//print_r($document->saveHTML());          
                         libxml_clear_errors();
                 }
 
