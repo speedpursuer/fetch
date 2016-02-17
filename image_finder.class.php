@@ -100,6 +100,7 @@ class ImageFinder
                         CURLOPT_MAXREDIRS => 10,
                 ));
                 $response = curl_exec($request);
+                //print_r($response);
                 curl_close($request);
 
                 // Create DOM document
