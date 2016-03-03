@@ -16,7 +16,7 @@
     	<script src="js/gifffer.js"></script>
         <script src="js/progressbar.js"></script>
         <script src="js/modal.js"></script>
-	    <script src="js/script_2_13.js"></script>     
+	    <script src="js/script_3_3.js"></script>     
 </head>
 <body>
 	<div class="container-fluid">
@@ -167,7 +167,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" id="save-clip" onclick="saveClip()">Save</button>
+                    <button type="button" class="btn btn-primary" id="save-clip" onclick="saveSingleClip()">Save</button>
                 </div>
             </div><!-- /.modal-content -->
         </div><!-- /.modal-dialog -->
