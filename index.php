@@ -12,11 +12,12 @@
 	    <script src="js/jquery-ui.js"></script>
     	<script src="js/pouchdb.js"></script>
 	    <script src="js/pouchdb.find.js"></script>        
-	    <script src="js/jquery.combo.select.js"></script>
+      <!-- <script src="js/pouchdb.quick-search.min.js"></script>   -->            
+	    <script src="js/jquery.combo.select_3_5.js"></script>
     	<script src="js/gifffer.js"></script>
         <script src="js/progressbar.js"></script>
         <script src="js/modal.js"></script>
-	    <script src="js/script_3_3.js"></script>     
+	    <script src="js/script_3_6.js"></script>     
 </head>
 <body>
 	<div class="container-fluid">
@@ -37,7 +38,17 @@
                 <button type="button" class="btn btn-primary .btn-xs form-control" data-toggle="modal" data-target="#clipModal" id="addClip">
                     Add Clip
                 </button>    
-            </div>               
+            </div>   
+            <div class="form-group">     
+                <button type="button" class="btn btn-primary .btn-xs form-control" data-toggle="modal" data-target="#clipUpdateModal" id="updateClip">
+                    Update Clip
+                </button>    
+            </div> 
+            <!-- <div class="form-group">     
+                <button type="button" class="btn btn-primary .btn-xs form-control"onclick="searchClip()">
+                   Test
+                </button>    
+            </div>   -->           
         </form>
     </div>
     <div class="container-fluid">
@@ -78,24 +89,7 @@
                         <div class="col-sm-10">
                           <input type="url" class="form-control" id="avatar" placeholder="http://" required>
                         </div>
-                      </div>
-                      <!--
-                      <div class="form-group">
-                        <label for="image" class="col-sm-2 control-label">Image</label>
-                        <div class="col-sm-10">
-                          <input type="url" class="form-control" id="image" placeholder="http://">
-                        </div>
                       </div>                     
-                      <div class="form-group">
-                        <div class="col-sm-offset-2 col-sm-10">
-                          <div class="checkbox">
-                            <label>
-                              <input type="checkbox" id="star">Star
-                            </label>
-                          </div>
-                        </div>
-                      </div>                     
-                      -->
                     </form>
                 </div>
                 <div class="modal-footer">
@@ -168,6 +162,110 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                     <button type="button" class="btn btn-primary" id="save-clip" onclick="saveSingleClip()">Save</button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+
+    <div class="modal fade" id="clipUpdateModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+
+                    <h4 class="modal-title">Update Clip</h4>
+                </div>
+                <div class="modal-body">
+                    <form class="form-horizontal" id="searchForm">
+                      <div class="form-group">
+                        <label for="name_search" class="col-sm-2 control-label">名称查询</label>
+                        <div class="col-sm-10">
+                          <input class="form-control" id="name_search" required>
+                        </div>
+                      </div>
+                      <div id="searchResult">
+                        <!-- <table class="table">
+                          <thead>
+                            <tr>
+                              <th>#</th>
+                              <th>球员</th>
+                              <th>动作</th>
+                              <th>描述</th>
+                              <th>图片</th>
+                              <th>选择</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr>
+                              <th scope="row">1</th>
+                              <td>MJ</td>
+                              <td>投篮</td>
+                              <td>最好的投篮</td>
+                              <td>http://bac.com/1.gif</td>
+                              <td><a href="#" onclick="updateClip();return false;">修改</a></td>
+                            </tr>
+                            <tr>
+                              <th scope="row">2</th>
+                              <td>Kobe</td>
+                              <td>运球</td>
+                              <td>胯下运球</td>
+                              <td>http://bac.com/1.gif</td>
+                              <td><a href="#" onclick="updateClip();return false;">修改</a></td>
+                            </tr>                         
+                          </tbody>
+                        </table> -->
+                      </div>
+                    </form>
+
+                    <form class="form-horizontal" id="clipUpdateForm">
+                       <div class="form-group">
+                        <label for="image_url_update" class="col-sm-2 control-label">图片</label>
+                        <div class="col-sm-10">
+                          <input type="url" class="form-control" id="image_url_update" placeholder="http://" required>
+                        </div>
+                      </div>
+                      <div class="form-group">
+                        <label for="player_name_update" class="col-sm-2 control-label">球员</label>
+                        <div class="col-sm-10" id="player_list">
+                            <select class="form-control" id="player_name_update" data-theme="bootstrap">                                
+                            </select>
+                        </div>
+                      </div>
+                      <div class="form-group">
+                        <label for="clip_title_update" class="col-sm-2 control-label">名称</label>
+                        <div class="col-sm-10">
+                          <input class="form-control" id="clip_title_update" required>
+                        </div>
+                      </div>
+                      <div class="form-group">
+                        <label for="clip_desc_update" class="col-sm-2 control-label">描述</label>
+                        <div class="col-sm-10">
+                          <input class="form-control" id="clip_desc_update" required>
+                        </div>
+                      </div>
+                      <div class="form-group">
+                        <label for="clip_move_update" class="col-sm-2 control-label">动作</label>
+                        <div class="col-sm-10" id="clip_move_update">                            
+                        </div>
+                      </div>      
+                      <div class="form-group">
+                        <button type="button" class="btn btn-default btn-xs" style="float: right; margin-right: 15px;" onclick="prepareUpdate('update')">更新</button>
+                        <button type="button" class="btn btn-default btn-xs" style="float: right; margin-right: 5px;" onclick="prepareUpdate('delete')">删除</button>                                    
+                      </div>
+                      <div class="alert alert-danger alert-dismissible fade in hide" role="alert">
+                        <!-- <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span></button> -->
+                         <span id="alert-message" style="margin-right: 1em;"></span>
+                         <button type="button" class="btn btn-danger btn-xs" onclick="performUpdate()">确认</button>
+                          <button type="button" class="btn btn-default btn-xs" onclick="dimissAlert()">取消</button>
+                        <p style="text-align: right;" class="clearfix">
+                         
+                        </p>
+                      </div>                                      
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="save-clip-update" onclick="searchClip()">Search</button>
                 </div>
             </div><!-- /.modal-content -->
         </div><!-- /.modal-dialog -->
