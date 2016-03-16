@@ -15,9 +15,10 @@
       <!-- <script src="js/pouchdb.quick-search.min.js"></script>   -->            
 	    <script src="js/jquery.combo.select_3_5.js"></script>
     	<script src="js/gifffer.js"></script>
-        <script src="js/progressbar.js"></script>
-        <script src="js/modal.js"></script>
-	    <script src="js/script_3_6.js"></script>     
+      <script src="js/progressbar.js"></script>
+      <script src="js/modal.js"></script>
+      <script src="js/sha1.js"></script>
+	    <script src="js/script_3_10.js"></script>     
 </head>
 <body>
 	<div class="container-fluid">
@@ -39,21 +40,22 @@
                     Add Clip
                 </button>    
             </div>   
-            <div class="form-group">     
+            <!-- <div class="form-group">
                 <button type="button" class="btn btn-primary .btn-xs form-control" data-toggle="modal" data-target="#clipUpdateModal" id="updateClip">
                     Update Clip
                 </button>    
             </div> 
-            <!-- <div class="form-group">     
-                <button type="button" class="btn btn-primary .btn-xs form-control"onclick="searchClip()">
+            <div class="form-group">     
+                <button type="button" class="btn btn-primary .btn-xs form-control"onclick="addSortableItem()">
                    Test
                 </button>    
-            </div>   -->           
+            </div>        -->      
         </form>
     </div>
     <div class="container-fluid">
         <div id="output">           
-          <div class="row"></div>            
+          <div class="row">            
+          </div>       
         </div>
     </div>
     <div class="modal fade" id="playerModal">
@@ -123,7 +125,7 @@
                             </select>
                         </div>
                       </div>
-                      <div class="form-group">
+                      <!-- <div class="form-group">
                         <label for="clip_title" class="col-sm-2 control-label">名称</label>
                         <div class="col-sm-10">
                           <input class="form-control" id="clip_title" required>
@@ -134,7 +136,7 @@
                         <div class="col-sm-10">
                           <input class="form-control" id="clip_desc" required>
                         </div>
-                      </div>
+                      </div> -->
                       <div class="form-group">
                         <label for="clip_move" class="col-sm-2 control-label">动作</label>
                         <div class="col-sm-10" id="clip_move">                            

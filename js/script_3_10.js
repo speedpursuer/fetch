@@ -1,5 +1,5 @@
-// var dbName = "cliplay_uat", remoteURL = "http://121.40.197.226:4984/"+dbName;
-var dbName = "cliplay_uat", remoteURL = "http://cliplay_editor:iPhone5S@121.40.197.226:4984/"+dbName;
+// var dbName = "cliplay_dev_3_13", remoteURL = "http://admin:12341234@localhost:5984/"+dbName;
+var dbName = "cliplay", remoteURL = "http://cliplay_editor:iPhone5S@121.40.197.226:4984/"+dbName;
 // var dbName = "cliplay_test", remoteURL = "http://admin:12341234@localhost:5984/"+dbName;
 var db = new PouchDB(dbName);
 
@@ -36,7 +36,17 @@ $(function()
             event.preventDefault();
             searchClip();
         }
+    });  
+
+    $('#clipModal').on('shown.bs.modal', function (e) {
+        // console.log("show modal");
+        $("#image_url").focus();
     });
+
+    $('#playerModal').on('shown.bs.modal', function (e) {
+        // console.log("show modal");
+        $("#name").focus();
+    });  
 });
 
 function findAndRemoveInstall() {
@@ -58,7 +68,7 @@ function enableButton() {
     setButtonDisable("search", false); 
     setButtonDisable("addPlayer", false);
     setButtonDisable("addClip", false);
-    setButtonDisable("updateClip", false);
+    setButtonDisable("updateClip", false);    
 }
 
 function setButtonDisable(id, flag) {
@@ -127,7 +137,7 @@ function getMoveList() {
             return row.doc;
         });
         setupClipForm();        
-        enableButton();                
+        enableButton();              
     });
 }
 
@@ -169,29 +179,22 @@ function getExistingClipsByImage() {
 function getDateID() {
     var currentdate = new Date();
     var datetime = "" + 
-                   currentdate.getFullYear() + 
-                   (currentdate.getMonth() + 1) + 
-                   currentdate.getDate() + 
-                   currentdate.getHours() +
-                   currentdate.getMinutes() + 
-                   currentdate.getSeconds();
+                   currentdate.getFullYear() + "_" +
+                   ("0" + (currentdate.getMonth() + 1)).slice(-2) + "_" +
+                   ("0" + currentdate.getDate()).slice(-2) + "_" +
+                   ("0" + currentdate.getHours()).slice(-2) + "_" +
+                   ("0" + currentdate.getMinutes()).slice(-2) + "_" +
+                   ("0" + currentdate.getSeconds()).slice(-2); 
+                   // (currentdate.getMonth() + 1) + 
+                   // currentdate.getDate() +                    
+                   // currentdate.getHours() +
+                   // currentdate.getMinutes() + 
+                   // currentdate.getSeconds();    
     return datetime;
 }
 
-function generateClip(image, player, move, name, desc) {
-
-    var prefix = player + "_" + move + "_" + getDateID();
-
-    return {
-        "_id": "clip_" + prefix,
-        "desc": desc,
-        "image": image,
-        "name": name,        
-        //"type": "clip",
-        "local": "local_" + prefix,
-        "move": move,
-        "player": player
-    };
+function getPostID(player, move) {
+    return "post_" + player + "_" + move;   
 }
 
 function generatePlayer(name, name_en, desc, image, avatar, star) {
@@ -244,22 +247,33 @@ function updateQty(playerID, moveID) {
 
 function saveSingleClip() {
 
-    setButtonDisable("save-clip", true);
-
     var move = getSeletValue("move_clip"); 
     var player = getValue("player_name");
     var image = getValue("image_url");
 
-    var name = getValue("clip_title");
-    var desc = getValue("clip_desc");
+    if(!endsWith(image, "gif")) {
+        alert("图片需要gif格式");
+        return;
+    }
 
-    putClip(name, desc, move, player, image, function(){
+    setButtonDisable("save-clip", true);
+
+    // var name = getValue("clip_title");
+    // var desc = getValue("clip_desc");
+
+    //putClip(name, desc, move, player, image, function(){
+    putClip(player, move, image, function(image){
         setButtonDisable("save-clip", false);
         cleanClipForm();                 
         alert("保存成功！");
+        addSortableItem(image);
     }, function() {        
         setButtonDisable("save-clip", false);
     });
+}
+
+function endsWith(string, suffix) {
+    return string.indexOf(suffix, string.length - suffix.length) !== -1
 }
 
 function saveClip(index) {
@@ -270,10 +284,10 @@ function saveClip(index) {
     var player = getValue("player"+index);
     var image = getValue("gif"+index);
 
-    var name = getValue("name"+index);
-    var desc = getValue("desc"+index);
+    // var name = getValue("name"+index);
+    // var desc = getValue("desc"+index);
 
-    putClip(name, desc, move, player, image, function(){
+    putClip(player, move, image, function(){
         saveSucess(index);
         setButtonDisable("save"+index, false);
     }, function() {        
@@ -281,56 +295,71 @@ function saveClip(index) {
     });
 }
 
-function putClip(name, desc, move, player, image, sCallback, fCallback) {
+function generatePost(player, move, list) {
+
+    var id = getPostID(player, move);
+
+    return {
+        "_id": id,        
+        "image": list,        
+    };
+}
+
+function putClip(player, move, image, sCallback, fCallback) {
     
-    if(name == "" || desc == "" || move == "" || player == "" || image == "") {
+    if(move == "" || player == "" || image == "") {
         alert("请填写完整信息");
         return;
     }
 
-    var clip = generateClip(image, player, move, name, desc);
+    var id = getPostID(player, move);
 
-    getClipByImage(clip.image).then(function(result) {
-        //console.log(result.docs.length);
-        if( result.docs.length > 0 ) {
-            alert("此短片链接已存在，不能再次保存");
-            fCallback();
-            return;
-        }
-        db.put(clip).then(function(){
-            console.log("clip created");
-            db.get(player).then(function(doc) {
-                doc.clip_total += 1;
-                if(doc.clip_moves[move]) {
-                    doc.clip_moves[move] += 1;
-                }else{
-                    doc.clip_moves[move] = 1;
+    db.allDocs({include_docs: true, startkey: id, endkey: id}).then(function(result){
+
+        var doc = {};
+        if(result.rows.length == 0) {
+            doc = generatePost(player, move, [image]);
+        }else {
+            doc = result.rows[0].doc;
+
+            var list = doc.image;
+
+            for(i in list) {
+                if(image == list[i]) {
+                    throw new Error('Already existed');
                 }
-                db.put(doc).then(function() {
-                    console.log("player updated");
-                    syncToRemote().on('complete', function () {
-                        console.log("sync to completed");
-                        sCallback();
-                    }).on('error', function (err) {
-                        fCallback();
-                        alert("保存失败: " + err);
-                    });
-                }).catch(function(e) {
-                    fCallback();
-                    alert("保存失败: player update err");                    
-                });
-            }).catch(function() {
-                fCallback();
-                alert("保存失败: get player err");                    
-            });
+            }
 
-        }).catch(function(err) {
+            doc.image.unshift(image);
+        }        
+        return db.put(doc);
+            
+    }).then(function() {
+        return db.get(player);
+    }).then(function(doc) {
+        doc.clip_total += 1;
+        if(doc.clip_moves[move]) {
+            doc.clip_moves[move] += 1;
+        }else{
+            doc.clip_moves[move] = 1;
+        }
+        return db.put(doc);
+    }).then(function() {
+        console.log("player updated");
+        return sync().on('complete', function () {
+            console.log("sync to completed");
+            sCallback(image);
+        }).on('error', function (err) {
             fCallback();
-            alert("保存失败: clip create err");                    
+            alert("同步失败: " + err);
         });
     }).catch(function(err) {
-        fCallback();
-        alert("保存失败: " + err);                    
+        if(err.message == "Already existed") {
+            sCallback(image);
+        }else {
+            fCallback();
+            alert("保存失败: " + err);                      
+        }        
     });
 }
 
@@ -357,7 +386,7 @@ function savePlayer() {
 
     db.put(player).then(function(){
         console.log("player created");     
-        syncToRemote().on('complete', function () {
+        sync().on('complete', function () {
             regeneratePlayeList(player);
             cleanForm();
             console.log("sync to completed");
@@ -517,7 +546,7 @@ function deleteClip() {
         player.clip_moves[move] -= 1;
         return db.put(player);
     }).then(function() {
-        syncToRemote().on('complete', function () {
+        sync().on('complete', function () {
             alert("删除成功");
             resetUpdateForm();
         }).on('error', function (err) {                    
@@ -576,7 +605,7 @@ function updateClip() {
         clip.desc = desc;
 
         db.put(clip)
-        .then(syncToRemote)
+        .then(sync)
         .then(function() {
             alert("更新成功");
             resetUpdateForm();
@@ -722,6 +751,156 @@ function setupClipForm() {
     $("#clipUpdateForm").hide();
 }
 
+function renderNewsForm() {
+    $('.row').empty();
+
+    var info = '<div class="col-xs-8 col-md-4">' +
+                    '<form class="form-horizontal" id="playerForm">' +
+                        '<div class="form-group">' +
+                            '<label for="news_thumb" class="col-sm-2 control-label">小图</label>' +
+                            '<div class="col-sm-10">' +
+                                '<input type="url" class="form-control" id="news_thumb" placeholder="http://" required>' +
+                            '</div>' +
+                        '</div>' +                      
+                        '<div class="form-group">' +
+                            '<label for="news_title" class="col-sm-2 control-label">名称</label>' +
+                            '<div class="col-sm-10">' +
+                                '<input class="form-control" id="news_title" required>' +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="form-group">' +
+                            '<label for="news_desc" class="col-sm-2 control-label">描述</label>' +
+                            '<div class="col-sm-10">' +
+                                '<input class="form-control" id="news_desc" required>' +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="form-group">' +
+                             '<button type="button" class="btn btn-primary save" onclick="saveNews()">保存</button>' +
+                        '</div>' +
+                    '</form>' +
+                '</div>';
+    var list = '<div class="col-xs-16 col-md-8">' +              
+                    '<ul id="sortable2" class="connectedSortable">' +
+                        '<li class="ui-state-default ui-state-disabled">已选短片</li>' +               
+                    '</ul>' +
+                    '<ul id="sortable1" class="connectedSortable">' +
+                        '<li class="ui-state-default ui-state-disabled">备选短片</li>' +               
+                    '</ul>' +                                                                       
+                '</div>';
+
+    $(".row").append(info + list);
+
+    $( "#sortable1, #sortable2" ).sortable({
+        connectWith: ".connectedSortable"
+    }).disableSelection();
+
+    $( "#sortable1, #sortable2" ).sortable({
+        cancel: ".ui-state-disabled",
+        items: "li:not(.ui-state-disabled)",
+        placeholder: "ui-state-highlight"
+    });
+}
+
+function addSortableItem(url) {
+
+    // url = "http://i2.hoopchina.com.cn/blogfile/201603/11/BbsImg145768045563810_425x237.gif";
+
+    if(!$("#news_title").length) {
+        renderNewsForm();
+    }
+
+    if(!url) {
+        return;
+    }
+
+    var id = CryptoJS.SHA1(url);
+
+    if($("#"+id).length) {
+        alert("此短片已添加，不需重复");
+        return;
+    }
+
+    var item = '<li class="ui-state-default imageList" url="'+url+'">' +
+                    '<div class="thumbnail order" id="'+id+'">' +                  
+                    '</div>' +
+               '</li>';
+    // var html = $("#sortable1").html();
+
+    // $("#sortable1").html(html + item);
+
+    $("#sortable2").append(item);
+        
+    var img = $('<img>')
+        .attr("data-gifffer", url)                
+        .attr("id", "img_"+id)
+        .appendTo("#"+id)
+        .parents(".ui-state-default")                
+        .css({opacity: 0, display: 'none'});    
+
+    Gifffer(finishAdd);
+}
+
+function finishAdd(image) {
+
+    $("#"+$(image).attr("id"))
+        .addClass("playing")
+        .parents(".ui-state-default")
+        .toggle()      
+        .animate({opacity: 1});
+}
+
+function saveNews() {
+
+    var list = [];
+
+    var name = getValue("news_title"), 
+        desc = getValue("news_desc"),
+        thumb = getValue("news_thumb");
+
+    // $(".imageList").each(function(index, element){
+    //     //console.log($(element).attr("url"));
+    //     list.push($(element).attr("url"));
+    // });
+
+    $("#sortable2").find('li').each(function(index, element){        
+
+        var url = $(element).attr("url");
+        if(url) {
+            // console.log($(element).attr("url"));
+            list.push(url);    
+        }        
+    });
+
+    if (name == "" || desc == "" || thumb == "" || list.length == 0) {
+        alert("请填写完整信息并选择至少一个图片");
+        return;
+    }   
+
+    var news = {
+        _id: "news_" + getDateID(),
+        image: list,
+        name: name,
+        desc: desc,
+        thumb: thumb,
+    }
+
+    putNews(news);
+}
+
+function putNews(news) {
+    db.put(news).then(function(){
+        sync().on('complete', function () {
+            alert("保存成功");
+            $('.row').empty();
+        }).on('error', function (err) {            
+            alert("保存成功，同步失败");
+            $('.row').empty();
+        });
+    }).catch(function() {
+        alert("保存失败");
+    })
+}
+
 function getImagesFromUrlDone(data)
 {
     $('.row').empty();
@@ -762,17 +941,17 @@ function getImagesFromUrlDone(data)
             form.append(image);
             $("#player"+i).comboSelect();
 
-            var name = '<div class="form-group">' +
-                            '<input type="text" class="form-control" placeholder="名称" id="name'+i+'">' +
-                       '</div>';
+            // var name = '<div class="form-group">' +
+            //                 '<input type="text" class="form-control" placeholder="名称" id="name'+i+'">' +
+            //            '</div>';
 
-            form.append(name);
+            // form.append(name);
 
-            var desc = '<div class="form-group">' +
-                            '<input type="text" class="form-control" placeholder="描述" id="desc'+i+'">' +
-                       '</div>';
+            // var desc = '<div class="form-group">' +
+            //                 '<input type="text" class="form-control" placeholder="描述" id="desc'+i+'">' +
+            //            '</div>';
 
-            form.append(desc);
+            // form.append(desc);
 
 
             var moveRadio = renderMoveList(i);
@@ -788,13 +967,13 @@ function getImagesFromUrlDone(data)
             form.append(move);
             $("#move"+i).buttonset();
 
-            var select = '<div class="form-group">' +
-                            '<div class="checkbox">' +
-                                '<label>' +
-                                    '<input type="checkbox">不选择此短片'+
-                                '</label>' +
-                            '</div>' +
-                         '</div>';
+            // var select = '<div class="form-group">' +
+            //                 '<div class="checkbox">' +
+            //                     '<label>' +
+            //                         '<input type="checkbox">不选择此短片'+
+            //                     '</label>' +
+            //                 '</div>' +
+            //              '</div>';
 
             var save = '<button id="save'+i+'" onclick="saveClip('+i+'); return false;">保存</button>';
 
@@ -830,6 +1009,10 @@ function syncFromRemote() {
 
 function syncToRemote() {
     return db.replicate.to(remoteURL);
+}
+
+function sync() {
+    return db.sync(remoteURL);
 }
 
 /**
