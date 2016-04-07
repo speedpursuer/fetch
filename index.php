@@ -18,7 +18,7 @@
       <script src="js/progressbar.js"></script>
       <script src="js/modal.js"></script>
       <script src="js/sha1.js"></script>
-	    <script src="js/script_3_10.js"></script>     
+	    <script src="js/script_4_6.js"></script>     
 </head>
 <body>
 	<div class="container-fluid">
@@ -38,6 +38,16 @@
             <div class="form-group">     
                 <button type="button" class="btn btn-primary .btn-xs form-control" data-toggle="modal" data-target="#clipModal" id="addClip">
                     Add Clip
+                </button>    
+            </div>   
+            <div class="form-group">     
+                <button type="button" class="btn btn-primary .btn-xs form-control" data-toggle="modal" data-target="#playsModal" id="addPlays">
+                    Add Play
+                </button>    
+            </div>   
+            <div class="form-group">     
+                <button type="button" class="btn btn-primary .btn-xs form-control" id="addNews" onclick="createNews()">
+                    Add News
                 </button>    
             </div>   
             <!-- <div class="form-group">
@@ -119,46 +129,26 @@
                         </div>
                       </div>
                       <div class="form-group">
+                        <label for="clip_option" class="col-sm-2 control-label">选项</label>
+                        <div id="clip_option" class="col-sm-10">
+                          <input type="radio" id="clip_player_add" name="clip_option_x" checked="checked" value="yes">
+                          <label for="clip_player_add">加入球员库</label>
+                          <input type="radio" id="clip_player_not_add" name="clip_option_x" value="no">
+                          <label for="clip_player_not_add">不加入</label>
+                        </div>
+                      </div>
+                      <div class="form-group clip-player-x">
                         <label for="player_name" class="col-sm-2 control-label">球员</label>
                         <div class="col-sm-10" id="player_list">
                             <select class="form-control" id="player_name" data-theme="bootstrap">                                
                             </select>
                         </div>
                       </div>
-                      <!-- <div class="form-group">
-                        <label for="clip_title" class="col-sm-2 control-label">名称</label>
-                        <div class="col-sm-10">
-                          <input class="form-control" id="clip_title" required>
-                        </div>
-                      </div>
-                      <div class="form-group">
-                        <label for="clip_desc" class="col-sm-2 control-label">描述</label>
-                        <div class="col-sm-10">
-                          <input class="form-control" id="clip_desc" required>
-                        </div>
-                      </div> -->
-                      <div class="form-group">
+                      <div class="form-group clip-move-x">
                         <label for="clip_move" class="col-sm-2 control-label">动作</label>
                         <div class="col-sm-10" id="clip_move">                            
                         </div>
-                      </div>                     
-                      <!--
-                      <div class="form-group">
-                        <label for="image" class="col-sm-2 control-label">Image</label>
-                        <div class="col-sm-10">
-                          <input type="url" class="form-control" id="image" placeholder="http://">
-                        </div>
-                      </div>                     
-                      <div class="form-group">
-                        <div class="col-sm-offset-2 col-sm-10">
-                          <div class="checkbox">
-                            <label>
-                              <input type="checkbox" id="star">Star
-                            </label>
-                          </div>
-                        </div>
-                      </div>                     
-                      -->
+                      </div>                      
                     </form>
                 </div>
                 <div class="modal-footer">
@@ -268,6 +258,76 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                     <button type="button" class="btn btn-primary" id="save-clip-update" onclick="searchClip()">Search</button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+
+    <div class="modal fade" id="playsModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+
+                    <h4 class="modal-title">Add Play</h4>
+                </div>
+                <div class="modal-body">
+                    <form class="form-horizontal" id="playerForm">     
+                      <div class="form-group">
+                        <label for="play_name" class="col-sm-2 control-label">名称</label>
+                        <div class="col-sm-10">
+                          <input class="form-control" id="play_name" required>
+                        </div>
+                      </div>
+                      <div class="form-group">
+                        <label for="play_desc" class="col-sm-2 control-label">描述</label>
+                        <div class="col-sm-10">
+                          <input class="form-control" id="play_desc" required>
+                        </div>
+                      </div>               
+                      <div class="form-group">
+                        <label for="play_cat" class="col-sm-2 control-label">分类</label>
+                        <div id="play_cat" class="col-sm-10">
+                          <input type="radio" id="play_cat_outside" name="play_cat" checked="checked" value="point_guard">
+                          <label for="play_cat_outside">外线</label>
+                          <input type="radio" id="play_cat_inside" name="play_cat" value="center">
+                          <label for="play_cat_inside">内线</label>
+                        </div>
+                      </div>
+                      <div class="form-group">
+                        <label for="play_level" class="col-sm-2 control-label">难度</label>
+                        <div id="play_level" class="col-sm-10">
+                          <input type="radio" id="play_level_1" name="play_level" checked="checked" value=1>
+                          <label for="play_level_1">1星</label>
+                          <input type="radio" id="play_level_2" name="play_level" value=2>
+                          <label for="play_level_2">2星</label>
+                          <input type="radio" id="play_level_3" name="play_level" value=3>
+                          <label for="play_level_3">3星</label>
+                        </div>
+                      </div>
+                      <div class="form-group">
+                        <label for="play_thumb" class="col-sm-2 control-label">微缩图</label>
+                        <div class="col-sm-10">
+                          <input type="url" class="form-control" id="play_thumb" placeholder="http://" required>
+                        </div>
+                      </div>    
+                      <div class="form-group">
+                        <label for="play_pb" class="col-sm-2 control-label">平面图</label>
+                        <div class="col-sm-10">
+                          <input type="url" class="form-control" id="play_pb" placeholder="http://" required>
+                        </div>
+                      </div>  
+                      <div class="form-group">
+                        <label for="play_real" class="col-sm-2 control-label">实景图</label>
+                        <div class="col-sm-10">
+                          <input type="url" class="form-control" id="play_real" placeholder="http://" required>
+                        </div>
+                      </div>                                                        
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="save-clip" onclick="savePlay()">Save</button>
                 </div>
             </div><!-- /.modal-content -->
         </div><!-- /.modal-dialog -->

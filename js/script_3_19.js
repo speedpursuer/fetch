@@ -1,5 +1,5 @@
-var dbName = "cliplay_dev_3_13", remoteURL = "http://admin:12341234@localhost:5984/"+dbName;
-// var dbName = "cliplay", remoteURL = "http://cliplay_editor:iPhone5S@121.40.197.226:4984/"+dbName;
+// var dbName = "cliplay_dev_3_29", remoteURL = "http://admin:12341234@localhost:5984/"+dbName;
+var dbName = "cliplay_prod", remoteURL = "http://cliplay_editor:iPhone5S@121.40.197.226:4984/"+dbName;
 // var dbName = "cliplay_test", remoteURL = "http://admin:12341234@localhost:5984/"+dbName;
 var db = new PouchDB(dbName);
 
@@ -47,7 +47,38 @@ $(function()
         // console.log("show modal");
         $("#name").focus();
     });  
+
+    $('#playsModal').on('shown.bs.modal', function (e) {
+        // console.log("show modal");
+        $("#play_name").focus();
+    });  
+    // setHeader();
 });
+
+function setHeader() {
+    var request;
+    var url = "http://www.baidu.com";
+    if (window.XMLHttpRequest) { // Mozilla, Safari, ...
+        request = new XMLHttpRequest();
+    } else if (window.ActiveXObject) { // IE
+        try {
+            request = new ActiveXObject('http://bbs.hupu.com/15770633.html');
+        } catch (e) {
+            try {
+                request = new ActiveXObject('http://bbs.hupu.com/15770633.html');
+            } catch (e) {}
+        }
+    }
+    request.open("GET", url, true);
+    request.send();
+
+    delete window.document.referrer;
+    window.document.__defineGetter__('referrer', function () {
+        return "http://bbs.hupu.com/15770633.html";
+    });
+
+    Object.defineProperty(document, "referrer", {get : function(){ return "http://bbs.hupu.com/15770633.html"; }});
+}
 
 function findAndRemoveInstall() {
     db.get("DBInstalled").then(function(doc) {
@@ -62,6 +93,7 @@ function disableButton() {
     setButtonDisable("addPlayer", true);
     setButtonDisable("addClip", true);
     setButtonDisable("updateClip", true);
+    setButtonDisable("addPlays", true);    
 }
 
 function enableButton() {    
@@ -69,6 +101,7 @@ function enableButton() {
     setButtonDisable("addPlayer", false);
     setButtonDisable("addClip", false);
     setButtonDisable("updateClip", false);    
+    setButtonDisable("addPlays", false);
 }
 
 function setButtonDisable(id, flag) {
@@ -278,10 +311,10 @@ function saveSingleClip() {
     var player = getValue("player_name");
     var image = getValue("image_url");
 
-    if(!endsWith(image, "gif")) {
-        alert("图片需要gif格式");
-        return;
-    }
+    // if(!endsWith(image, "gif")) {
+    //     alert("图片需要gif格式");
+    //     return;
+    // }
 
     setButtonDisable("save-clip", true);
 
@@ -320,6 +353,70 @@ function saveClip(index) {
     }, function() {        
         setButtonDisable("save"+index, false);
     });
+}
+
+function savePlay() {
+
+    setButtonDisable("savePlay", true);
+
+    var cat = getSeletValue("play_cat"); 
+    var level = getSeletValue("play_level"); 
+    var name = getValue("play_name");
+    var desc = getValue("play_desc");
+    var thumb = getValue("play_thumb");
+    var url1 = getValue("play_pb");
+    var url2 = getValue("play_real");
+
+    if(cat == "" || level == "" || name == "" || desc == "" || thumb == "" || url1 == "" || url2 == "") {
+        alert("请填写完整信息");
+        return;
+    }    
+
+    if(isChinese(name)) {
+        alert("名称不能含中文");
+        return;
+    }
+
+    var obj = generatePlay(name, desc, cat, level, thumb, url1, url2);
+
+    db.put(obj).then(function(){
+        return sync().on('complete', function () {
+            console.log("sync to completed");            
+        }).on('error', function (err) {            
+            alert("同步失败: " + err);
+        });
+    }).then(function(){
+        resetPlaysForm();
+        alert("保存成功");                  
+        setButtonDisable("savePlay", true);         
+    }).catch(function(err) {        
+        alert("保存失败: " + err);                              
+        setButtonDisable("savePlay", true);
+    });
+}
+
+function resetPlaysForm() {
+    $("#play_name").html('');    
+    $("#play_desc").html('');    
+    $("#play_thumb").html('');    
+    $("#play_pb").html('');    
+    $("#play_real").html('');    
+}
+
+function isChinese(string) {
+    return (string.length != string.replace(/[^\x00-\xff]/g,"**").length); 
+}
+
+function generatePlay(name, desc, cat, level, thumb, url1, url2) {
+    var name_id = name.replace(/ /g,"_");
+    return {
+        "_id": "plays_" + cat + "_" + name_id.toLowerCase(),
+        "name": name,                
+        "desc": desc,
+        "level": parseInt(level),
+        "image": [url1, url2],               
+        "thumb": thumb
+    };   
 }
 
 function generatePost(player, move, list) {
@@ -776,6 +873,9 @@ function setupClipForm() {
     $("#clip_move_update").buttonset();
 
     $("#clipUpdateForm").hide();
+
+    $("#play_cat").buttonset();
+    $("#play_level").buttonset();    
 }
 
 function renderNewsForm() {

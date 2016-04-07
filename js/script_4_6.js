@@ -1,5 +1,5 @@
-var dbName = "cliplay_dev_3_13", remoteURL = "http://admin:12341234@localhost:5984/"+dbName;
-// var dbName = "cliplay", remoteURL = "http://cliplay_editor:iPhone5S@121.40.197.226:4984/"+dbName;
+// var dbName = "cliplay_dev_3_29", remoteURL = "http://admin:12341234@localhost:5984/"+dbName;
+var dbName = "cliplay_prod", remoteURL = "http://cliplay_editor:iPhone5S@121.40.197.226:4984/"+dbName;
 // var dbName = "cliplay_test", remoteURL = "http://admin:12341234@localhost:5984/"+dbName;
 var db = new PouchDB(dbName);
 
@@ -11,6 +11,7 @@ var searchResult = [];
 var selectedClip = "";
 var playerUI = {};
 var action = "";
+var localStorage = window.localStorage;
 
 
 /** Default Document Ready Event **/
@@ -47,7 +48,63 @@ $(function()
         // console.log("show modal");
         $("#name").focus();
     });  
+
+    $('#playsModal').on('shown.bs.modal', function (e) {
+        // console.log("show modal");
+        $("#play_name").focus();
+    });  
+
+    $('input:radio[name="clip_option_x"]').click(function(){
+        setClipOption('x');
+    });
+
+    // setHeader();
 });
+
+function setClipOption(i) {    
+    if(needSaveClipForPlayer(i)) {
+        $(".clip-player-"+i).show();
+        $(".clip-move-"+i).show();
+    }else {        
+        $(".clip-player-"+i).hide();
+        $(".clip-move-"+i).hide();
+    }
+}
+
+function needSaveClipForPlayer(i) {
+    // if(i) {
+    //     return ($('input:radio[name="clip_option'+i+'"]:checked').val() == "yes");
+    // }else{
+    //     return ($('input:radio[name="clip_option"]:checked').val() == "yes");
+    // }    
+    var optioin = $('input:radio[name="clip_option_'+i+'"]:checked').val();
+    return optioin == "yes";
+}
+
+function setHeader() {
+    var request;
+    var url = "http://www.baidu.com";
+    if (window.XMLHttpRequest) { // Mozilla, Safari, ...
+        request = new XMLHttpRequest();
+    } else if (window.ActiveXObject) { // IE
+        try {
+            request = new ActiveXObject('http://bbs.hupu.com/15770633.html');
+        } catch (e) {
+            try {
+                request = new ActiveXObject('http://bbs.hupu.com/15770633.html');
+            } catch (e) {}
+        }
+    }
+    request.open("GET", url, true);
+    request.send();
+
+    delete window.document.referrer;
+    window.document.__defineGetter__('referrer', function () {
+        return "http://bbs.hupu.com/15770633.html";
+    });
+
+    Object.defineProperty(document, "referrer", {get : function(){ return "http://bbs.hupu.com/15770633.html"; }});
+}
 
 function findAndRemoveInstall() {
     db.get("DBInstalled").then(function(doc) {
@@ -62,6 +119,8 @@ function disableButton() {
     setButtonDisable("addPlayer", true);
     setButtonDisable("addClip", true);
     setButtonDisable("updateClip", true);
+    setButtonDisable("addPlays", true);  
+    setButtonDisable("addNews", true);  
 }
 
 function enableButton() {    
@@ -69,6 +128,9 @@ function enableButton() {
     setButtonDisable("addPlayer", false);
     setButtonDisable("addClip", false);
     setButtonDisable("updateClip", false);    
+    setButtonDisable("addPlays", false);
+    setButtonDisable("addNews", false);
+    updateNewsButton();
 }
 
 function setButtonDisable(id, flag) {
@@ -278,10 +340,10 @@ function saveSingleClip() {
     var player = getValue("player_name");
     var image = getValue("image_url");
 
-    if(!endsWith(image, "gif")) {
-        alert("图片需要gif格式");
-        return;
-    }
+    // if(!endsWith(image, "gif")) {
+    //     alert("图片需要gif格式");
+    //     return;
+    // }
 
     setButtonDisable("save-clip", true);
 
@@ -289,14 +351,67 @@ function saveSingleClip() {
     // var desc = getValue("clip_desc");
 
     //putClip(name, desc, move, player, image, function(){
+
+    setStorage(image);
+    updateNewsButton();
+
+    if(!needSaveClipForPlayer('x')) {
+        setButtonDisable("save-clip", false);
+        cleanClipForm();
+        return;
+    }
+
     putClip(player, move, image, function(image){
         setButtonDisable("save-clip", false);
         cleanClipForm();                 
         alert("保存成功！");
-        addSortableItem(image);
+        // addSortableItem(image);
     }, function() {        
         setButtonDisable("save-clip", false);
     });
+}
+
+function setStorage(url) {   
+    var list = getStorage();
+    list.push(url);
+    localStorage["clips"] = JSON.stringify(list);    
+}
+
+function getStorage() {
+    var item = localStorage.getItem("clips");
+    if(!item) {
+        list = [];
+    }else {
+        list = JSON.parse(item);
+    }
+    return list;
+}
+
+function updateNewsButton() {
+    var count = getStorage().length;
+    $("#addNews").html("Add News (" + count + ")");
+}
+
+function createNews() {
+    var urls = getStorage();
+
+    if(!urls.length) {
+        return;        
+    }    
+
+    renderNewsForm();
+
+    $( "#dialog" ).dialog("open");
+
+    for(i in urls) {
+        addSortableItem(urls[i]);    
+    }
+}
+
+function cleanNews() {
+    localStorage["clips"] = [];
+    $('.row').empty();
+    updateNewsButton();
 }
 
 function endsWith(string, suffix) {
@@ -313,6 +428,14 @@ function saveClip(index) {
 
     // var name = getValue("name"+index);
     // var desc = getValue("desc"+index);
+    setStorage(image);
+    updateNewsButton();
+
+    if(!needSaveClipForPlayer(index)) {
+        saveSucess(index);
+        setButtonDisable("save"+index, false);        
+        return;
+    }
 
     putClip(player, move, image, function(){
         saveSucess(index);
@@ -320,6 +443,70 @@ function saveClip(index) {
     }, function() {        
         setButtonDisable("save"+index, false);
     });
+}
+
+function savePlay() {
+
+    setButtonDisable("savePlay", true);
+
+    var cat = getSeletValue("play_cat"); 
+    var level = getSeletValue("play_level"); 
+    var name = getValue("play_name");
+    var desc = getValue("play_desc");
+    var thumb = getValue("play_thumb");
+    var url1 = getValue("play_pb");
+    var url2 = getValue("play_real");
+
+    if(cat == "" || level == "" || name == "" || desc == "" || thumb == "" || url1 == "" || url2 == "") {
+        alert("请填写完整信息");
+        return;
+    }    
+
+    if(isChinese(name)) {
+        alert("名称不能含中文");
+        return;
+    }
+
+    var obj = generatePlay(name, desc, cat, level, thumb, url1, url2);
+
+    db.put(obj).then(function(){
+        return sync().on('complete', function () {
+            console.log("sync to completed");            
+        }).on('error', function (err) {            
+            alert("同步失败: " + err);
+        });
+    }).then(function(){
+        resetPlaysForm();
+        alert("保存成功");                  
+        setButtonDisable("savePlay", true);         
+    }).catch(function(err) {        
+        alert("保存失败: " + err);                              
+        setButtonDisable("savePlay", true);
+    });
+}
+
+function resetPlaysForm() {
+    $("#play_name").html('');    
+    $("#play_desc").html('');    
+    $("#play_thumb").html('');    
+    $("#play_pb").html('');    
+    $("#play_real").html('');    
+}
+
+function isChinese(string) {
+    return (string.length != string.replace(/[^\x00-\xff]/g,"**").length); 
+}
+
+function generatePlay(name, desc, cat, level, thumb, url1, url2) {
+    var name_id = name.replace(/ /g,"_");
+    return {
+        "_id": "plays_" + cat + "_" + name_id.toLowerCase(),
+        "name": name,                
+        "desc": desc,
+        "level": parseInt(level),
+        "image": [url1, url2],               
+        "thumb": thumb
+    };   
 }
 
 function generatePost(player, move, list) {
@@ -776,6 +963,10 @@ function setupClipForm() {
     $("#clip_move_update").buttonset();
 
     $("#clipUpdateForm").hide();
+
+    $("#play_cat").buttonset();
+    $("#play_level").buttonset();    
+    $("#clip_option").buttonset();
 }
 
 function renderNewsForm() {
@@ -803,7 +994,8 @@ function renderNewsForm() {
                         '</div>' +
                         '<div class="form-group">' +
                              '<button type="button" class="btn btn-primary save" onclick="saveNews()">保存</button>' +
-                        '</div>' +
+                             '<button type="button" class="btn btn-primary" onclick="cleanNews()">清空图记录</button>' +
+                        '</div>' +                       
                     '</form>' +
                 '</div>';
     var list = '<div class="col-xs-16 col-md-8">' +              
@@ -829,6 +1021,45 @@ function renderNewsForm() {
 }
 
 function addSortableItem(url) {
+
+    // url = "http://i2.hoopchina.com.cn/blogfile/201603/11/BbsImg145768045563810_425x237.gif";
+
+    // if(!$("#news_title").length) {
+    //     renderNewsForm();
+    // }
+
+    if(!url) {
+        return;
+    }    
+
+    var id = CryptoJS.SHA1(url);
+
+    if($("#"+id).length) {
+        alert("此短片已添加，不需重复");
+        return;
+    }
+
+    var item = '<li class="ui-state-default imageList" url="'+url+'">' +
+                    '<div class="thumbnail order" id="'+id+'">' +                  
+                    '</div>' +
+               '</li>';
+    // var html = $("#sortable1").html();
+
+    // $("#sortable1").html(html + item);
+
+    $("#sortable2").append(item);
+        
+    var img = $('<img>')
+        .attr("data-gifffer", url)                
+        .attr("id", "img_"+id)
+        .appendTo("#"+id)
+        .parents(".ui-state-default")                
+        .css({opacity: 0, display: 'none'});    
+
+    Gifffer(finishAdd);
+}
+
+function addSortableItem_(url) {
 
     // url = "http://i2.hoopchina.com.cn/blogfile/201603/11/BbsImg145768045563810_425x237.gif";
 
@@ -954,13 +1185,26 @@ function getImagesFromUrlDone(data)
 
             $("#clip"+i).append(caption);        
                        
-            var player = '<div class="form-group form-group-player" data-id="'+i+'" id="form-group-player'+i+'"><label for="player'+i+'">球员</label>' +    
+            var player = '<div class="form-group form-group-player clip-player-'+i+'" data-id="'+i+'" id="form-group-player'+i+'"><label for="player'+i+'">球员</label>' +    
                             '<select class="form-control" id="player'+i+'" data-theme="bootstrap">' +                                   
                                 playerOption +   
                             '</select>' +
                          '</div>';
 
-            var form = $("#form"+i);                 
+            var form = $("#form"+i);             
+
+            var option = '<div class="form-group">' +
+                            '<label for="clip_option_'+i+'">选项</label>' +
+                            '<div id="clip_option_'+i+'">' +
+                                '<input type="radio" id="clip_player_add_'+i+'" name="clip_option_'+i+'" checked="checked" value="yes" onclick="clipOption('+i+')">' +
+                                '<label for="clip_player_add_'+i+'">加入球员库</label>' +
+                                '<input type="radio" id="clip_player_not_add_'+i+'" name="clip_option_'+i+'" value="no" onclick="clipOption('+i+')">' +
+                                '<label for="clip_player_not_add_'+i+'">不加入</label>' +
+                            '</div>' +
+                         '</div>';    
+
+            form.append(option);
+            $("#clip_option_"+i).buttonset();
             
             var image = '<input style="display:none" value="'+data.images[i].src+'" id="gif'+i+'">';   
 
@@ -983,7 +1227,7 @@ function getImagesFromUrlDone(data)
 
             var moveRadio = renderMoveList(i);
 
-            var move = '<div class="form-group">' +
+            var move = '<div class="form-group clip-move-'+i+'">' +
                           '<label for="move'+i+'">动作</label>' +
                           '<div id="move'+i+'">' +
                               moveRadio +
@@ -1011,6 +1255,11 @@ function getImagesFromUrlDone(data)
     }
 
     Gifffer(display);
+}
+
+function clipOption(i) {
+    // alert("");
+    setClipOption(i);
 }
 
 function display(image) {
