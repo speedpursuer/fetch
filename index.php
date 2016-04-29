@@ -18,7 +18,7 @@
       <script src="js/progressbar.js"></script>
       <script src="js/modal.js"></script>
       <script src="js/sha1.js"></script>
-	    <script src="js/script_4_6.js"></script>     
+	    <script src="js/script_4_29.js"></script>     
 </head>
 <body>
 	<div class="container-fluid">
@@ -26,25 +26,33 @@
         <form action="scan.php" method="post" id="url-form" class="form-inline">
             <div class="form-group">
                 <input type="url" name="url" placeholder="http://" required="" class="form-control">
+            </div>            
+            <div class="form-group">
+                <input type="submit" class="btn btn-primary .btn-xs form-control" value="Get GIF Images" id="searchGIF">                                    
             </div>
             <div class="form-group">
-                <input type="submit" class="btn btn-primary .btn-xs form-control" value="Get Images" id="search">                                    
+                <input type="submit" class="btn btn-primary .btn-xs form-control" value="Get All Images" id="search">                                    
             </div>
-            <div class="form-group">
-                <button type="button" class="btn btn-primary .btn-xs form-control" data-toggle="modal" data-target="#playerModal" id="addPlayer">
-                    Add Player
-                </button>      
-            </div>       
             <div class="form-group">     
                 <button type="button" class="btn btn-primary .btn-xs form-control" data-toggle="modal" data-target="#clipModal" id="addClip">
                     Add Clip
                 </button>    
-            </div>   
-            <div class="form-group">     
+            </div>  
+             <div class="form-group">
+                <button type="button" class="btn btn-primary .btn-xs form-control" data-toggle="modal" data-target="#pushModal" id="send">
+                    Send Push
+                </button>      
+            </div>     
+            <div class="form-group">
+                <button type="button" class="btn btn-primary .btn-xs form-control" data-toggle="modal" data-target="#playerModal" id="addPlayer">
+                    Add Player
+                </button>      
+            </div>                   
+            <!-- <div class="form-group">     
                 <button type="button" class="btn btn-primary .btn-xs form-control" data-toggle="modal" data-target="#playsModal" id="addPlays">
                     Add Play
                 </button>    
-            </div>   
+            </div>    -->
             <div class="form-group">     
                 <button type="button" class="btn btn-primary .btn-xs form-control" id="addNews" onclick="createNews()">
                     Add News
@@ -328,6 +336,45 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                     <button type="button" class="btn btn-primary" id="save-clip" onclick="savePlay()">Save</button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+
+     <div class="modal fade" id="pushModal">
+        <div class="modal-dialog">
+            <div class="modal-content">            
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+
+                    <h4 class="modal-title">发送推送</h4>
+                </div>
+                <div class="modal-body">
+                    <!-- <form class="form-horizontal" id="searchForm"> -->
+                    <form action="push.php" method="post" id="push-form" class="form-horizontal">                  
+                      <div class="form-group">
+                        <label for="title" class="col-sm-2 control-label">标题</label>
+                        <div class="col-sm-10">
+                          <input class="form-control" name="title" id="title" required="">
+                        </div>
+                      </div>       
+                      <div class="form-group">
+                        <label for="message" class="col-sm-2 control-label">内容</label>
+                        <div class="col-sm-10">
+                          <input class="form-control" name="message" id="message" required="">
+                        </div>
+                      </div>                   
+                      <div class="form-group">
+                        <label for="push_id" class="col-sm-2 control-label">ID</label>
+                        <div class="col-sm-10">
+                          <input class="form-control" name="push_id" id="push_id" required="">
+                        </div>
+                      </div>                   
+                    </form>             
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="submit-push" onclick="submitPush()">发送</button>
                 </div>
             </div><!-- /.modal-content -->
         </div><!-- /.modal-dialog -->

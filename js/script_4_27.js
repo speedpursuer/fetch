@@ -1,5 +1,5 @@
-// var dbName = "cliplay_dump_4_27", remoteURL = "http://admin:12341234@localhost:5984/"+dbName;
-var dbName = "cliplay_prod", remoteURL = "http://cliplay_editor:iPhone5S@121.40.197.226:4984/"+dbName;
+var dbName = "cliplay_dump_4_26", remoteURL = "http://admin:12341234@localhost:5984/"+dbName;
+// var dbName = "cliplay_prod", remoteURL = "http://cliplay_editor:iPhone5S@121.40.197.226:4984/"+dbName;
 // var dbName = "cliplay_test", remoteURL = "http://admin:12341234@localhost:5984/"+dbName;
 var db = new PouchDB(dbName);
 
@@ -21,6 +21,7 @@ $(function()
     disableButton();
     // Make form do what we want
     $('#url-form').submit(getImagesFromUrl);
+    $('#push-form').submit(pushNotification);
 
     dbSetup();
     //deleteDB();
@@ -129,7 +130,8 @@ function disableButton() {
     setButtonDisable("updateClip", true);
     setButtonDisable("addPlays", true);  
     setButtonDisable("addNews", true);  
-    setButtonDisable("searchGIF", true);      
+    setButtonDisable("searchGIF", true);   
+    setButtonDisable("send", true);   
 }
 
 function enableButton() {    
@@ -140,6 +142,7 @@ function enableButton() {
     setButtonDisable("addPlays", false);
     setButtonDisable("addNews", false);
     setButtonDisable("searchGIF", false);  
+    setButtonDisable("send", false);   
     updateNewsButton();
 }
 
@@ -1230,16 +1233,22 @@ function saveNews() {
         return;
     }   
 
+    var _id = "news_" + getDateID(); 
+
     var news = {
-        _id: "news_" + getDateID(),
+        _id: _id,
         image: list,
         name: name,
         desc: desc,
         thumb: thumb,
     }
 
+    setInputValue("title", name);
+    setInputValue("push_id", _id);
+
     putNews(news, function(){        
-        cleanNews(); 
+        cleanNews();
+        $('#pushModal').modal('show');
     });
 }
 
@@ -1409,10 +1418,19 @@ function sync() {
     return db.sync(remoteURL);
 }
 
+function pushNotificationDone(data) {
+    if(data.success) {
+        $('#pushModal').modal('hide');
+        alert("发送成功");
+    }else {
+        alert("发送失败");
+    }
+}
+
 /**
  * Sends request for images.
  */
- function getImagesFromUrl()
+function getImagesFromUrl()
  {
     $( "#dialog" ).dialog("open");
     // Make object out of form data
@@ -1420,6 +1438,43 @@ function sync() {
     
     // Create request
     $.post($(this).attr('action'), data, getImagesFromUrlDone);
+
+    // Return false so the form doesn't actually submit
+    return false;
+}
+
+function submitPush() {
+    // document.getElementById("push-form").submit(pushNotification);
+
+    // $('#push-form').submit(pushNotification);
+    $('#push-form').submit();
+    // document.getElementById("push-form").submit(pushNotification);
+}
+
+function checkPushData(data, callback) {
+
+    if(!callback) return;
+
+    if(data.title == "" || data.message == "" || data.push_id == "") {
+        alert("请填写完整信息"); 
+        return;       
+    }
+
+    db.get(data.push_id).then(function() {
+        callback();
+    }).catch(function() {
+        alert("ID不存在，请重新输入");        
+    });
+}
+
+function pushNotification() {    
+    // Make object out of form data
+    var data = $(this).serializeObject();
+    var action = $(this).attr('action');
+
+    checkPushData(data, function() {        
+        $.post(action, data, pushNotificationDone);
+    });    
 
     // Return false so the form doesn't actually submit
     return false;
