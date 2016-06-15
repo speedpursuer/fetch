@@ -1355,7 +1355,8 @@ function getImagesFromUrlDone(data)
     if(data && data.images) {
 
         var selectedPlayer = getValue("player_name");
-        var selectedMove = getSeletValue("move_clip");     
+        var selectedMove = getSeletValue("move_clip");       
+        var selectedOption = needSaveClipForPlayer("x"); 
 
         renderPlayerList(selectedPlayer);        
 
@@ -1377,6 +1378,7 @@ function getImagesFromUrlDone(data)
             var img = $('<img>')
                 .attr("data-gifffer", data.images[i].src)                
                 .attr("id", 'img'+i)
+                .attr("index", i)
                 .appendTo("#clip"+i)
                 .parents(".clip")                
                 .css({opacity: 0, display: 'none'});                
@@ -1401,9 +1403,12 @@ function getImagesFromUrlDone(data)
                             '<button id="save'+i+'" class="btn btn-primary form-control" onclick="saveClip('+i+'); return false;">保存</button>' +                            
                           '</div>';
                           
-            form.append(buttons);   
+            form.append(buttons);
 
-            var option = '<div class="form-group">' +
+            var option = "";
+
+            if(selectedOption) {
+                option = '<div class="form-group">' +
                             '<label for="clip_option_'+i+'">选项</label>' +
                             '<div id="clip_option_'+i+'">' +
                                 '<input type="radio" id="clip_player_add_'+i+'" name="clip_option_'+i+'" checked="checked" value="yes" onclick="clipOption('+i+')">' +
@@ -1412,6 +1417,17 @@ function getImagesFromUrlDone(data)
                                 '<label for="clip_player_not_add_'+i+'">不加入</label>' +
                             '</div>' +
                          '</div>';    
+            }else {
+                option = '<div class="form-group">' +
+                            '<label for="clip_option_'+i+'">选项</label>' +
+                            '<div id="clip_option_'+i+'">' +
+                                '<input type="radio" id="clip_player_add_'+i+'" name="clip_option_'+i+'" value="yes" onclick="clipOption('+i+')">' +
+                                '<label for="clip_player_add_'+i+'">加入球员库</label>' +
+                                '<input type="radio" id="clip_player_not_add_'+i+'" name="clip_option_'+i+'" checked="checked" value="no" onclick="clipOption('+i+')">' +
+                                '<label for="clip_player_not_add_'+i+'">不加入</label>' +
+                            '</div>' +
+                         '</div>';    
+            }
 
             form.append(option);
             $("#clip_option_"+i).buttonset();
@@ -1484,7 +1500,14 @@ function clipOption(i) {
 function display(image) {
 
    if(image.width > 100 && image.height > 100) {
-        $("#"+$(image).attr("id"))
+
+        var id = $(image).attr("id");
+
+        var index = $(image).attr("index");
+
+        setClipOption(index);
+
+        $("#"+id)
         .addClass("playing")
         .parents(".clip")
         .toggle()        
