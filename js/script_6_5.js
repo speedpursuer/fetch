@@ -1,4 +1,4 @@
-// var dbName = "cliplay_dump_4_26", remoteURL = "http://admin:12341234@localhost:5984/"+dbName;
+// var dbName = "cliplay_dump_5_12", remoteURL = "http://admin:12341234@localhost:5984/"+dbName;
 var dbName = "cliplay_prod", remoteURL = "http://cliplay_editor:iPhone5S@121.40.197.226:4984/"+dbName;
 // var dbName = "cliplay_test", remoteURL = "http://admin:12341234@localhost:5984/"+dbName;
 var db = new PouchDB(dbName);
@@ -12,6 +12,7 @@ var selectedClip = "";
 var playerUI = {};
 var action = "";
 var searchAll = false;
+var searchWeibo = false;
 var localStorage = window.localStorage;
 
 
@@ -61,14 +62,78 @@ $(function()
     });
 
     $('#search').click(function(){
-        searchAll = true;        
+        searchAll = true;       
+        searchWeibo = false; 
     });
 
     $('#searchGIF').click(function(){
         searchAll = false;
+        searchWeibo = false;
     });
+
+    $('#searchWeibo').click(function(){
+        searchWeibo = true;
+    });    
+
+    // $("#search-images").click(function(){
+    //     searchImages();
+    // });
     // setHeader();
 });
+
+function jsonp(url, callback) {
+    var callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
+    window[callbackName] = function(data) {
+        delete window[callbackName];
+        document.body.removeChild(script);
+        callback(data);
+    };
+
+    var script = document.createElement('script');
+    script.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'callback=' + callbackName;
+    document.body.appendChild(script);
+}
+
+function getWeiboImages() {
+    // alert(getValue("fetch-url"));
+    // $.get("http://photo.weibo.com/photos/get_all?uid=5866649154&album_id=3974296035825267&count=100&page=1&type=1", function(result){
+    //     // $("div").html(result);
+    //     var a = result;
+    // });
+
+    $.ajax({
+        // crossOrigin: true,
+        type: "GET",
+        url: "http://photo.weibo.com/photos/get_all?uid=5866649154&album_id=3974296035825267&count=100&page=1&type=1",
+        // data: data,
+        success: function(result){
+            var a = result;
+        },
+        // dataType: "json"
+    });
+
+    // var trans = new XMLHttpRequest();
+
+    // trans.onreadystatechange = function() {
+    //     if (trans.readyState==4 && trans.status==200)
+    //     {
+    //         aler(trans.responseText);
+    //     }
+    // };
+
+    // trans.open("get", 
+    //     "http://photo.weibo.com/photos/get_all?uid=5866649154&album_id=3974296035825267&count=30&page=1&type=1&__rnd=1464005699883&callback=?", 
+    //     true);
+
+    // trans.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+    // trans.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+
+    // trans.send("");
+
+    // jsonp('http://photo.weibo.com/photos/get_all?uid=5866649154&album_id=3974296035825267&count=30&page=1&type=1', function(data) {
+    //     alert(data);
+    // });
+}
 
 function setClipOption(i) {    
     if(needSaveClipForPlayer(i)) {
@@ -131,7 +196,8 @@ function disableButton() {
     setButtonDisable("addPlays", true);  
     setButtonDisable("addNews", true);  
     setButtonDisable("searchGIF", true);   
-    setButtonDisable("send", true);   
+    setButtonDisable("send", true); 
+    setButtonDisable("searchWeibo", true);   
 }
 
 function enableButton() {    
@@ -142,7 +208,8 @@ function enableButton() {
     setButtonDisable("addPlays", false);
     setButtonDisable("addNews", false);
     setButtonDisable("searchGIF", false);  
-    setButtonDisable("send", false);   
+    setButtonDisable("send", false);
+    setButtonDisable("searchWeibo", false);      
     updateNewsButton();
 }
 
@@ -1266,6 +1333,21 @@ function putNews(news, callback) {
     })
 }
 
+function getImagesFromUrlDoneWeibo(result) {  
+    var img = result.data.photo_list;
+    var data = {
+        images: []
+    };
+
+    for(var i in img) {
+        data.images.push({
+            src: img[i].pic_host + "/mw690/" + img[i].pic_name
+        });
+    }
+
+    getImagesFromUrlDone(data);
+}
+
 function getImagesFromUrlDone(data)
 {
     $('.row').empty();
@@ -1286,6 +1368,8 @@ function getImagesFromUrlDone(data)
             if(src.indexOf('smal') != -1) {
                 data.images[i].src = $.trim(src.replace('small', ''));    
             }
+
+            console.log(data.images[i].src);
 
             var col = '<div class="clip col-sm-12 col-md-6"><div class="thumbnail" id="clip'+i+'"></div></div>';                
             $(".row").append(col);       
@@ -1308,7 +1392,16 @@ function getImagesFromUrlDone(data)
                             '</select>' +
                          '</div>';
 
-            var form = $("#form"+i);             
+            var form = $("#form"+i);          
+
+            var buttons = '<div class="form-group">' +
+                            '<button id="cancel'+i+'" class="btn btn-default form-control" onclick="cancelClip('+i+'); return false;">舍弃</button>' +
+                          '</div>' +
+                          '<div class="form-group">' +
+                            '<button id="save'+i+'" class="btn btn-primary form-control" onclick="saveClip('+i+'); return false;">保存</button>' +                            
+                          '</div>';
+                          
+            form.append(buttons);   
 
             var option = '<div class="form-group">' +
                             '<label for="clip_option_'+i+'">选项</label>' +
@@ -1368,15 +1461,13 @@ function getImagesFromUrlDone(data)
 
             // form.append(save);
             // form.append(cancel);
+            
 
-            var buttons = '<div class="form-group">' +
-                            '<button id="save'+i+'" class="btn btn-primary form-control" onclick="saveClip('+i+'); return false;">保存</button>' +                            
-                          '</div>' +
-                          '<div class="form-group">' +
-                            '<button id="cancel'+i+'" class="btn btn-default form-control" onclick="cancelClip('+i+'); return false;">舍弃</button>' +
-                          '</div>';
+            // var buttons = '<div class="form-group">' +
+            //                 '<button id="save'+i+'" class="btn btn-primary form-control" onclick="saveClip('+i+'); return false;">保存</button>' +                            
+            //               '</div>';
 
-            form.append(buttons);
+            // form.append(buttons);
             
             //if(i==3) break;
         }
@@ -1424,18 +1515,6 @@ function sync() {
     return db.sync(remoteURL);
 }
 
-function pushNotificationDone(data) {
-    if(data.success) {        
-        $('#pushModal').modal('hide');
-        setInputValue("title", "");
-        setInputValue("push_id", "");
-        setInputValue("message", "");
-        alert("发送成功");
-    }else {
-        alert("发送失败");
-    }
-}
-
 /**
  * Sends request for images.
  */
@@ -1445,8 +1524,13 @@ function getImagesFromUrl()
     // Make object out of form data
     var data = $(this).serializeObject();
     
-    // Create request
-    $.post($(this).attr('action'), data, getImagesFromUrlDone);
+    if(searchWeibo) {
+        data.weibo = "true";
+        $.post($(this).attr('action'), data, getImagesFromUrlDoneWeibo);
+    }else {
+        data.weibo = "false";
+        $.post($(this).attr('action'), data, getImagesFromUrlDone);
+    }
 
     // Return false so the form doesn't actually submit
     return false;
@@ -1460,7 +1544,7 @@ function submitPush() {
     // document.getElementById("push-form").submit(pushNotification);
 }
 
-function checkPushData(data, callback) {
+function checkPushData(data, callback, failCallback) {
 
     if(!callback) return;
 
@@ -1472,21 +1556,116 @@ function checkPushData(data, callback) {
     db.get(data.push_id).then(function() {
         callback();
     }).catch(function() {
-        alert("ID不存在，请重新输入");        
+        alert("ID不存在，请重新输入");   
+        if(failCallback) failCallback();     
     });
 }
 
 function pushNotification() {    
+
+    setButtonDisable("submit-push", true);
+
     // Make object out of form data
     var data = $(this).serializeObject();
     var action = $(this).attr('action');
 
     checkPushData(data, function() {        
-        $.post(action, data, pushNotificationDone);
+        $.post(action, data, pushNotificationDone); 
+    },function(){
+        setButtonDisable("submit-push", false);
     });    
 
     // Return false so the form doesn't actually submit
     return false;
+}
+
+function pushNotificationDone(data) {
+    if(data.success) {        
+        $('#pushModal').modal('hide');
+        setInputValue("title", "");
+        setInputValue("push_id", "");
+        setInputValue("message", "");
+        alert("发送成功");
+    }else {
+        alert("发送失败");
+    }
+    setButtonDisable("submit-push", false);
+}
+
+function searchImages() {
+    var id = getValue("push_id");
+
+    db.get(id).then(function(result) {
+        var data = {
+            images: result.image
+        };        
+        $('#pushModal').modal('hide');        
+        showImagesFromDB(data);
+    }).catch(function() {
+        alert("ID不存在，请重新输入");           
+    });
+}
+
+function showImagesFromDB(data)
+{
+    $( "#dialog" ).dialog("open");
+
+    $('.row').empty();
+
+    if(data && data.images) {        
+
+        for(var i in data.images)
+        {
+            // if (!searchAll && !data.images[i].src.match(/gif$/)) continue;
+
+            var src = data.images[i];
+
+            if(src.indexOf('smal') != -1) {
+                data.images[i] = $.trim(src.replace('small', ''));    
+            }
+
+            console.log(data.images[i]);
+
+            var col = '<div class="clip col-sm-12 col-md-6"><div class="thumbnail" id="clip'+i+'"></div></div>';                
+            $(".row").append(col);       
+            
+            var img = $('<img>')
+                .attr("data-gifffer", data.images[i])                
+                .attr("id", 'img'+i)
+                .appendTo("#clip"+i)
+                .parents(".clip")                
+                .css({opacity: 0, display: 'none'});                
+                    
+
+            var caption = '<div class="caption"><form id="form'+i+'"></form></div>';
+
+            $("#clip"+i).append(caption);                
+
+            var form = $("#form"+i);          
+
+            var buttons = '<div class="form-group">' +
+                            '<button id="cancel'+i+'" class="btn btn-default form-control" onclick="cancelClip('+i+'); return false;">去掉</button>' +
+                          '</div>';
+
+            buttons +=    '<div class="form-group">' +
+                            '<button id="save'+i+'" class="btn btn-primary form-control" onclick="saveClip('+i+'); return false;">保存到新闻</button>' +                            
+                          '</div>';
+                          
+            form.append(buttons);  
+
+            var urlInput = '<input type="url" class="form-control" id="gif'+i+'" value="'+src+'">';
+
+            form.append(urlInput);  
+
+            // if(i==1) break;
+        }
+    }
+
+    Gifffer(display);
+}
+
+function saveImageAs(i) {
+    // window.location.assign("http://i3.hoopchina.com.cn/blogfile/201402/25/BbsImg139331400775657_400*226.gif");
 }
 
 /**

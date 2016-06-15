@@ -9,6 +9,7 @@
     	<link rel="stylesheet" href="css/style_2_6.css">
 
     	<script src="js/jquery-2.1.3.min.js"></script>
+      <!-- <script type="text/javascript" src="js/jquery.ajax-cross-origin.min.js"></script> -->
 	    <script src="js/jquery-ui.js"></script>
     	<script src="js/pouchdb.js"></script>
 	    <script src="js/pouchdb.find.js"></script>        
@@ -18,14 +19,14 @@
       <script src="js/progressbar.js"></script>
       <script src="js/modal.js"></script>
       <script src="js/sha1.js"></script>
-	    <script src="js/script_4_29.js"></script>     
+	    <script src="js/script_6_5.js"></script>     
 </head>
 <body>
 	<div class="container-fluid">
         <h1>Clip Fetcher</h1>
         <form action="scan.php" method="post" id="url-form" class="form-inline">
             <div class="form-group">
-                <input type="url" name="url" placeholder="http://" required="" class="form-control">
+                <input type="url" name="url" id="fetch-url" placeholder="http://" required="" class="form-control">
             </div>            
             <div class="form-group">
                 <input type="submit" class="btn btn-primary .btn-xs form-control" value="Get GIF Images" id="searchGIF">                                    
@@ -33,6 +34,9 @@
             <div class="form-group">
                 <input type="submit" class="btn btn-primary .btn-xs form-control" value="Get All Images" id="search">                                    
             </div>
+            <div class="form-group">     
+                <input type="submit" class="btn btn-primary .btn-xs form-control" value="Get Weibo" id="searchWeibo">
+            </div>  
             <div class="form-group">     
                 <button type="button" class="btn btn-primary .btn-xs form-control" data-toggle="modal" data-target="#clipModal" id="addClip">
                     Add Clip
@@ -373,7 +377,8 @@
                     </form>             
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="search-images" onclick="searchImages()">查看图片</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>                    
                     <button type="button" class="btn btn-primary" id="submit-push" onclick="submitPush()">发送</button>
                 </div>
             </div><!-- /.modal-content -->

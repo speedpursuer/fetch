@@ -7,7 +7,7 @@
  * @link     http://www.geekality.net/?p=1585
  * @license  http://creativecommons.org/licenses/by/3.0/
  */
-class ImageFinder
+class ImageFinderWeibo
 {
         private $document;
         private $url;
@@ -36,12 +36,7 @@ class ImageFinder
                 // Get the HTML document
                 $this->document = self::get_document($this->url);
                 
-                //$this->document = self::login();
-
-                // Get the base url
-                $this->base = self::get_base($this->document);
-                if( ! $this->base)
-                        $this->base = $this->url;
+                //$this->document = self::login();                
         }
 
 
@@ -51,33 +46,10 @@ class ImageFinder
         public function get_images()
         {
                 // Makes sure we're loaded
-                $this->load();
-
-                // Image collection array
-                $images = array();
-                
-                // For all found img tags
-                foreach($this->document->getElementsByTagName('img') as $img)
-                {
-
-                        $src = $img->getAttribute('data-url')? $img->getAttribute('data-url'): $img->getAttribute('src');
-                        
-                        // Extract what we want
-                        $image = array
-                        (
-                                'src' => self::make_absolute($src, $this->base),
-                        );
-                        
-                        // Skip images without src
-                        if( ! $image['src'])
-                                continue;
-
-                        // Add to collection. Use src as key to prevent duplicates.
-                        $images[$image['src']] = $image;
-                }
+                $this->load();                
 
                 // Return values
-                return array_values($images);
+                return $this->document;
         }
 
 
@@ -86,7 +58,8 @@ class ImageFinder
          */
         private static function get_document($url)
         {
-        	$cookie_jar = dirname(__FILE__)."/cookie.txt";
+//         		$cookie_jar = dirname(__FILE__)."/cookie.txt";
+        	$cookie_jar = dirname(__FILE__)."/cookies1.txt";
         	                	
                 // Set up and execute a request for the HTML
                 $request = curl_init();
@@ -112,21 +85,8 @@ class ImageFinder
                 //print_r($err);
                 //print_r($response);
                 curl_close($request);
-
-                // Create DOM document
-                $document = new DOMDocument();
-
-                // Load response into document, if we got any
-                if($response)
-                {
-                        libxml_use_internal_errors(true);
-                        $searchPage = mb_convert_encoding($response, 'HTML-ENTITIES', "gb2312");
-                        $document->loadHTML($searchPage);                        
-                       	//print_r($document->saveHTML());          
-                        libxml_clear_errors();
-                }
-                           
-                return $document;
+				                           
+                return $response;
         }
                        
         private static function login() {
