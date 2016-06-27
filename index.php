@@ -19,7 +19,7 @@
       <script src="js/progressbar.js"></script>
       <script src="js/modal.js"></script>
       <script src="js/sha1.js"></script>
-	    <script src="js/script_6_15.js"></script>     
+	    <script src="js/script_6_26.js"></script>     
 </head>
 <body>
 	<div class="container-fluid">
@@ -60,6 +60,11 @@
             <div class="form-group">     
                 <button type="button" class="btn btn-primary .btn-xs form-control" id="addNews" onclick="createNews()">
                     Add News
+                </button>    
+            </div>   
+            <div class="form-group">     
+                <button type="button" class="btn btn-primary .btn-xs form-control" id="showPost" onclick="xlshowPost()">
+                    Generate Post
                 </button>    
             </div>   
             <!-- <div class="form-group">
@@ -160,7 +165,13 @@
                         <label for="clip_move" class="col-sm-2 control-label">动作</label>
                         <div class="col-sm-10" id="clip_move">                            
                         </div>
-                      </div>                      
+                      </div>          
+                      <div class="form-group">
+                      <label for="clip_move" class="col-sm-2 control-label">描述</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" placeholder="选填" id="clip_desc">
+                        </div>
+                      </div>
                     </form>
                 </div>
                 <div class="modal-footer">
@@ -380,6 +391,30 @@
                     <button type="button" class="btn btn-primary" id="search-images" onclick="searchImages()">查看图片</button>
                     <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>                    
                     <button type="button" class="btn btn-primary" id="submit-push" onclick="submitPush()">发送</button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+    <div class="modal fade" id="postModal">
+        <div class="modal-dialog">
+            <div class="modal-content">            
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">生成帖子内容</h4>
+                </div>
+                <div class="modal-body">
+                    <form class="form-horizontal">                  
+                      <div class="form-group">
+                        <label for="post-content" class="col-sm-2 control-label">帖子内容</label>
+                        <div class="col-sm-10">
+                          <textarea class="form-control" id="post-content" rows="5"></textarea>
+                        </div>
+                      </div>                                        
+                    </form>             
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close
+                    </button>                  
                 </div>
             </div><!-- /.modal-content -->
         </div><!-- /.modal-dialog -->

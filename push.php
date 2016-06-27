@@ -11,9 +11,9 @@ $push_id = $_POST['push_id'];
 require_once 'sdk.php';
 
 // 创建SDK对象.
-$sdk = new PushSDK("Sk05U14kHEFgG6hEpiEDczkE", "cb6l75DMxCtV8Cyza1SGzXTpQ8tMHB03");
+$sdk = new PushSDK("tRi4CsGduLe8AZ6tU5YHikGK", "qxtCDqSquDe9pXbo4LZgUjuDjx7q9M1X");
 
-$channelId = '5490126185581469391';
+$channelId = '5569240550285516066';
 
 $message = array (
 	"title" => $title,
@@ -47,7 +47,7 @@ if($rs === false){
 	// echo json_encode(array('success' => true));
 }
 
-$sdk = new PushSDK("dGDKbPIrZ561HRPKbeECXGQv", "Gwe1bEAlGIW8eZkNovxduTgAn8929C5E");
+$sdk = new PushSDK("10YipKN8jSfOn0t5e1NbBwXl", "1WcGMOFMGGGvYZqKkn53s2ooKpXmo6Et");
 
 $message = array (
 		'aps' => array (
@@ -62,12 +62,12 @@ $message = array (
 // 设置消息类型为 通知类型.
 $opts = array (
 		'msg_type' => 1,        // iOS不支持透传, 只能设置 msg_type:1, 即通知消息.
-		'deploy_status' => 1,   // iOS应用的部署状态:  1：开发状态；2：生产状态； 若不指定，则默认设置为生产状态。
+		'deploy_status' => 2,   // iOS应用的部署状态:  1：开发状态；2：生产状态； 若不指定，则默认设置为生产状态。
 );
 
 // 向目标设备发送一条消息
-$rs = $sdk -> pushMsgToSingleDevice($channelId, $message, $opts);
-// $rs = $sdk -> pushMsgToAll($message, $opts);
+// $rs = $sdk -> pushMsgToSingleDevice($channelId, $message, $opts);
+$rs = $sdk -> pushMsgToAll($message, $opts);
 
 $iosResult = false;
 // 判断返回值,当发送失败时, $rs的结果为false, 可以通过getError来获得错误信息.

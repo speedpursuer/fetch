@@ -1,5 +1,5 @@
-// var dbName = "cliplay_dump_5_12", remoteURL = "http://admin:12341234@localhost:5984/"+dbName;
-var dbName = "cliplay_prod", remoteURL = "http://cliplay_editor:iPhone5S@121.40.197.226:4984/"+dbName;
+// var dbName = "cliplay_new_db_dev_6_15", remoteURL = "http://admin:12341234@localhost:5984/"+dbName;
+var dbName = "cliplay_prod_new", remoteURL = "http://cliplay_editor:iPhone5S@121.40.197.226:4984/"+dbName;
 // var dbName = "cliplay_test", remoteURL = "http://admin:12341234@localhost:5984/"+dbName;
 var db = new PouchDB(dbName);
 
@@ -14,6 +14,7 @@ var action = "";
 var searchAll = false;
 var searchWeibo = false;
 var localStorage = window.localStorage;
+var postContent = "";
 
 
 /** Default Document Ready Event **/
@@ -56,7 +57,11 @@ $(function()
         // console.log("show modal");
         $("#play_name").focus();
     });  
-
+	
+	$('#postModal').on('shown.bs.modal', function (e) {
+        $("#post-content").focus();
+    });  
+	
     $('input:radio[name="clip_option_x"]').click(function(){
         setClipOption('x');
     });
@@ -263,19 +268,33 @@ function dbSetup() {
     //     return db.get('_local/DBInstalled');
     // }
 
+    // syncFromRemote().then(function() {
+    //     console.log("sync completed");
+    //     return db.createIndex({
+    //         index: {                
+    //             fields: ['image']
+    //         }
+    //     });
+    // }).then(function () {        
+    //     return db.createIndex({
+    //         index: {        
+    //             fields: ['name']
+    //         }
+    //     });    
+    // }).then(function(){
+    //     console.log("index created");
+    //     renderList();
+    // }).catch(function (err) {
+    //     console.log(err);
+    // });
+
     syncFromRemote().then(function() {
         console.log("sync completed");
-        return db.createIndex({
-            index: {                
-                fields: ['image']
-            }
-        });
-    }).then(function () {        
         return db.createIndex({
             index: {        
                 fields: ['name']
             }
-        });    
+        });   
     }).then(function(){
         console.log("index created");
         renderList();
@@ -492,6 +511,8 @@ function saveSingleClip() {
     var move = getSeletValue("move_clip"); 
     var player = getValue("player_name");
     var image = getValue("image_url");
+    var desc = getValue("clip_desc");
+    
 
     // if(!endsWith(image, "gif")) {
     //     alert("图片需要gif格式");
@@ -505,7 +526,7 @@ function saveSingleClip() {
 
     //putClip(name, desc, move, player, image, function(){
 
-    setStorage(image);
+    setStorage(image, desc);
     updateNewsButton();
 
     if(!needSaveClipForPlayer('x')) {
@@ -514,7 +535,7 @@ function saveSingleClip() {
         return;
     }
 
-    putClip(player, move, image, function(image){
+    putClip(player, move, image, desc, function(image){
         setButtonDisable("save-clip", false);
         cleanClipForm();                 
         alert("保存成功！");
@@ -524,9 +545,14 @@ function saveSingleClip() {
     });
 }
 
-function setStorage(url) {   
+function setStorage(url, desc) {   
     var list = getStorage();
-    list.push(url);
+    list.push(
+        {
+            url: url,
+            desc: desc,
+        }
+    );
     localStorage["clips"] = JSON.stringify(list);    
 }
 
@@ -585,10 +611,12 @@ function saveClip(index) {
     var move = getSeletValue("move"+index); 
     var player = getValue("player"+index);
     var image = getValue("gif"+index);
+    var desc = getValue("desc"+index);
 
+    // return;
     // var name = getValue("name"+index);
-    // var desc = getValue("desc"+index);
-    setStorage(image);
+    
+    setStorage(image, desc);
     updateNewsButton();
 
     if(!needSaveClipForPlayer(index)) {
@@ -597,7 +625,7 @@ function saveClip(index) {
         return;
     }
 
-    putClip(player, move, image, function(){
+    putClip(player, move, image, desc, function(){
         saveSucess(index);
         setButtonDisable("save"+index, false);
     }, function() {        
@@ -679,7 +707,7 @@ function generatePost(player, move, list) {
     };
 }
 
-function putClip(player, move, image, sCallback, fCallback) {
+function putClip(player, move, image, desc, sCallback, fCallback) {
     
     if(move == "" || player == "" || image == "") {
         alert("请填写完整信息");
@@ -700,12 +728,17 @@ function putClip(player, move, image, sCallback, fCallback) {
             var list = doc.image;
 
             for(i in list) {
-                if(image == list[i]) {
+                if(image == list[i].url) {
                     throw new Error('Already existed');
                 }
             }
 
-            doc.image.unshift(image);
+            doc.image.unshift(
+                {
+                    url: image,
+                    desc: desc,
+                }
+            );
         }        
         return db.put(doc);
             
@@ -1087,7 +1120,7 @@ function cleanClipForm() {
     //$("#clip_move").val("");
     //$("#player_name").val("");
     $("#image_url").val("");
-    $("#clip_title").val("");
+    // $("#clip_title").val("");
     $("#clip_desc").val("");
     $('#clipModal').modal('hide');
 }
@@ -1159,6 +1192,12 @@ function renderNewsForm() {
                             '</div>' +
                         '</div>' +
                         '<div class="form-group">' +
+                            '<label for="news_summary" class="col-sm-2 control-label">概要</label>' +
+                            '<div class="col-sm-10">' +
+                                '<input class="form-control" id="news_summary" placeholder="选填">' +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="form-group">' +
                              '<button type="button" class="btn btn-primary save" onclick="saveNews()">保存</button>' +
                              '<button type="button" class="btn btn-default" onclick="cleanNews()">清空图记录</button>' +
                         '</div>' +                       
@@ -1186,7 +1225,29 @@ function renderNewsForm() {
     });
 }
 
-function addSortableItem(url) {
+function xlshowPost() {
+	
+	var postText = "";
+
+    $("#sortable2").find('li').each(function(index, element){        
+
+        var url = $(element).attr("url");
+        if(url) {
+            postText += '<div><img src="' + url + '"></div><br>';
+        }        
+    });
+    
+    if(postText == "") {
+        if(postContent == "") return;
+        $('#post-content').val(postContent);    
+    }else {
+        $('#post-content').val(postText);    
+    }
+    
+    $('#postModal').modal('show');
+}
+
+function addSortableItem(clip) {
 
     // url = "http://i2.hoopchina.com.cn/blogfile/201603/11/BbsImg145768045563810_425x237.gif";
 
@@ -1194,18 +1255,22 @@ function addSortableItem(url) {
     //     renderNewsForm();
     // }
 
-    if(!url) {
+    if(!clip) {
         return;
     }    
 
-    var id = CryptoJS.SHA1(url);
+    var id = CryptoJS.SHA1(clip.url);
 
     if($("#"+id).length) {
         alert("此短片已添加，不需重复");
         return;
     }
 
-    var item = '<li class="ui-state-default imageList" url="'+url+'">' +
+    var item = '<li class="ui-state-default imageList" url="'+clip.url+'" desc="'+clip.desc+'">' +
+                    '<div class="">' +                  
+                        // '<textarea cols="5">fdafdsafdsafdsafdsafdsafdsafdsafadsfdafdafa</textarea>'
+                        '<input value="'+clip.desc+'">' +
+                    '</div>' +
                     '<div class="thumbnail order" id="'+id+'">' +                  
                     '</div>' +
                '</li>';
@@ -1216,7 +1281,7 @@ function addSortableItem(url) {
     $("#sortable2").append(item);
         
     var img = $('<img>')
-        .attr("data-gifffer", url)                
+        .attr("data-gifffer", clip.url)                
         .attr("id", "img_"+id)
         .appendTo("#"+id)
         .parents(".ui-state-default")                
@@ -1279,7 +1344,8 @@ function saveNews() {
 
     var name = getValue("news_title"), 
         desc = getValue("news_desc"),
-        thumb = getValue("news_thumb");
+        thumb = getValue("news_thumb"),
+        summary = getValue("news_summary");
 
     // $(".imageList").each(function(index, element){
     //     //console.log($(element).attr("url"));
@@ -1289,10 +1355,14 @@ function saveNews() {
     $("#sortable2").find('li').each(function(index, element){        
 
         var url = $(element).attr("url");
+        var desc = $(element).attr("desc");
         if(url) {
             // console.log($(element).attr("url"));
-            list.push(url);    
-        }        
+            list.push({
+                url: url,
+                desc: desc
+            });   
+        }       
     });
 
     if (name == "" || desc == "" || thumb == "" || list.length < 2) {
@@ -1308,6 +1378,7 @@ function saveNews() {
         name: name,
         desc: desc,
         thumb: thumb,
+        summary: summary,
     }
 
     setInputValue("title", name);
@@ -1352,6 +1423,8 @@ function getImagesFromUrlDone(data)
 {
     $('.row').empty();
 
+    postContent = "";
+
     if(data && data.images) {
 
         var selectedPlayer = getValue("player_name");
@@ -1370,10 +1443,12 @@ function getImagesFromUrlDone(data)
                 data.images[i].src = $.trim(src.replace('small', ''));    
             }
 
-            console.log(data.images[i].src);
+            // console.log('<div><img src="' + data.images[i].src + '"></div><br>');
+
+            postContent += '<div><img src="' + data.images[i].src + '"></div><br>'
 
             var col = '<div class="clip col-sm-12 col-md-6"><div class="thumbnail" id="clip'+i+'"></div></div>';                
-            $(".row").append(col);       
+            $(".row").append(col);
             
             var img = $('<img>')
                 .attr("data-gifffer", data.images[i].src)                
@@ -1444,13 +1519,6 @@ function getImagesFromUrlDone(data)
 
             // form.append(name);
 
-            // var desc = '<div class="form-group">' +
-            //                 '<input type="text" class="form-control" placeholder="描述" id="desc'+i+'">' +
-            //            '</div>';
-
-            // form.append(desc);
-
-
             var moveRadio = renderMoveList(i, selectedMove);
 
             var move = '<div class="form-group clip-move-'+i+'">' +
@@ -1463,6 +1531,19 @@ function getImagesFromUrlDone(data)
 
             form.append(move);
             $("#move"+i).buttonset();
+
+            var desc = '<div class="form-group">' +
+                            '<label for="clip_desc_'+i+'">描述</label>' +
+                            '<div id="clip_desc_'+i+'">' +
+                                '<input type="text" class="form-control" placeholder="选填" id="desc'+i+'">' +
+                            '</div>'
+                       '</div>';
+
+            form.append(desc);
+
+            var hiddenImg = '<img style="display:none;" src="' + data.images[i].src + '">'
+
+            form.append(hiddenImg);
 
             // var select = '<div class="form-group">' +
             //                 '<div class="checkbox">' +
@@ -1635,25 +1716,28 @@ function showImagesFromDB(data)
 
     $('.row').empty();
 
+    postContent = "";
+
     if(data && data.images) {        
 
         for(var i in data.images)
         {
             // if (!searchAll && !data.images[i].src.match(/gif$/)) continue;
 
-            var src = data.images[i];
+            var src = data.images[i].url;
+            var desc = data.images[i].desc;
+
+            postContent += '<div><img src="' + src + '"></div><br>'
 
             if(src.indexOf('smal') != -1) {
-                data.images[i] = $.trim(src.replace('small', ''));    
+                src = $.trim(src.replace('small', ''));    
             }
-
-            console.log(data.images[i]);
 
             var col = '<div class="clip col-sm-12 col-md-6"><div class="thumbnail" id="clip'+i+'"></div></div>';                
             $(".row").append(col);       
             
             var img = $('<img>')
-                .attr("data-gifffer", data.images[i])                
+                .attr("data-gifffer", src)                
                 .attr("id", 'img'+i)
                 .appendTo("#clip"+i)
                 .parents(".clip")                
@@ -1679,6 +1763,19 @@ function showImagesFromDB(data)
             var urlInput = '<input type="url" class="form-control" id="gif'+i+'" value="'+src+'">';
 
             form.append(urlInput);  
+
+            var desc = '<div class="form-group">' +
+                            '<label for="clip_desc_'+i+'">描述</label>' +
+                            '<div id="clip_desc_'+i+'">' +
+                                '<input type="text" class="form-control" placeholder="选填" id="desc'+i+'" value="'+desc+'">' +
+                            '</div>'
+                       '</div>';
+
+            form.append(desc);
+
+            var hiddenImg = '<img style="display:none;" src="' + data.images[i].src + '">'
+
+            form.append(hiddenImg);
 
             // if(i==1) break;
         }
