@@ -6,7 +6,7 @@
         <link rel="stylesheet" href="css/bootstrap/css/bootstrap.min.css">
 	    <link rel="stylesheet" href="css/jquery-ui.css">
     	<link rel="stylesheet" href="css/combo.select.css">
-    	<link rel="stylesheet" href="css/style_2_6.css">
+    	<link rel="stylesheet" href="css/style_7_22.css">
 
     	<script src="js/jquery-2.1.3.min.js"></script>
       <!-- <script type="text/javascript" src="js/jquery.ajax-cross-origin.min.js"></script> -->
@@ -19,7 +19,7 @@
       <script src="js/progressbar.js"></script>
       <script src="js/modal.js"></script>
       <script src="js/sha1.js"></script>
-	    <script src="js/script_6_26.js"></script>     
+	    <script src="js/script_7_30.js"></script>     
 </head>
 <body>
 	<div class="container-fluid">
@@ -67,6 +67,11 @@
                     Generate Post
                 </button>    
             </div>   
+            <div class="form-group">     
+                <button type="button" class="btn btn-primary .btn-xs form-control" id="syncToProd" onclick='xlSyncToProd()'>
+                     Sync To PRO
+               </button>    
+            </div> 
             <!-- <div class="form-group">
                 <button type="button" class="btn btn-primary .btn-xs form-control" data-toggle="modal" data-target="#clipUpdateModal" id="updateClip">
                     Update Clip

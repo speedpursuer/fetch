@@ -1,6 +1,8 @@
 // var dbName = "cliplay_new_db_dev_6_15", remoteURL = "http://admin:12341234@localhost:5984/"+dbName;
-var dbName = "cliplay_prod_new", remoteURL = "http://cliplay_editor:iPhone5S@121.40.197.226:4984/"+dbName;
 // var dbName = "cliplay_test", remoteURL = "http://admin:12341234@localhost:5984/"+dbName;
+var dbName = "cliplay_staging", remoteURL = "http://cliplay_editor:iPhone5S@121.40.197.226:4984/"+dbName;
+var dbNameProd = "cliplay_prod_new", remoteURLProd = "http://cliplay_editor:iPhone5S@121.40.197.226:4984/"+dbNameProd;
+
 var db = new PouchDB(dbName);
 
 var playerOption = "";
@@ -203,6 +205,8 @@ function disableButton() {
     setButtonDisable("searchGIF", true);   
     setButtonDisable("send", true); 
     setButtonDisable("searchWeibo", true);   
+    setButtonDisable("showPost", true);
+    setButtonDisable("syncToProd", true);   
 }
 
 function enableButton() {    
@@ -215,6 +219,8 @@ function enableButton() {
     setButtonDisable("searchGIF", false);  
     setButtonDisable("send", false);
     setButtonDisable("searchWeibo", false);      
+    setButtonDisable("showPost", false);
+    setButtonDisable("syncToProd", false);   
     updateNewsButton();
 }
 
@@ -1232,8 +1238,16 @@ function xlshowPost() {
     $("#sortable2").find('li').each(function(index, element){        
 
         var url = $(element).attr("url");
+        var desc = $(element).attr("desc");
         if(url) {
-            postText += '<div><img src="' + url + '"></div><br>';
+            // postText += '<div><img src="' + url + '"></div><br>';
+
+            postText += getHtmlForClip(url, desc);
+                    // '<div>' +
+                    //     '<p class="p1" style="text-align: center;">' + desc +
+                    //         '<img src="'+url+'" style="line-height: 1.6;">'+
+                    //     '</p>'+
+                    // '</div>';
         }        
     });
     
@@ -1419,6 +1433,16 @@ function getImagesFromUrlDoneWeibo(result) {
     getImagesFromUrlDone(data);
 }
 
+function getHtmlForClip(url, desc) {
+    return '<div style="text-align: left; margin-bottom: 1em;">' +
+                '<p class="p1">' +
+                    '<font face="幼圆" size="2">' + desc +                           
+                    '</font>' +
+                '</p>' +
+                '<img src="'+url+'">' +
+            '</div>';
+}
+
 function getImagesFromUrlDone(data)
 {
     $('.row').empty();
@@ -1439,13 +1463,30 @@ function getImagesFromUrlDone(data)
 
             var src = data.images[i].src;
 
-            if(src.indexOf('smal') != -1) {
+            if(src.indexOf('small') != -1) {
                 data.images[i].src = $.trim(src.replace('small', ''));    
             }
 
             // console.log('<div><img src="' + data.images[i].src + '"></div><br>');
 
-            postContent += '<div><img src="' + data.images[i].src + '"></div><br>'
+            // postContent += '<div><img src="' + data.images[i].src + '"></div><br>'
+
+            postContent += getHtmlForClip(data.images[i].src, 'TextHolder');
+
+                    // '<div>' +
+                    //     '<p class="p1" style="text-align: center;">some-text'+
+                    //         '<img src="'+src+'" style="line-height: 1.6;">'+
+                    //     '</p>'+
+                    // '</div>';
+
+                    // '<div style="text-align: left; margin-bottom: 1em;">' +
+                    //     '<p class="p1">' +
+                    //         '<font face="幼圆" size="3">' +
+                    //             'some text' +
+                    //         '</font>' +
+                    //     '</p>' +
+                    //     '<img src="'+data.images[i].src+'">' +
+                    // '</div>';
 
             var col = '<div class="clip col-sm-12 col-md-6"><div class="thumbnail" id="clip'+i+'"></div></div>';                
             $(".row").append(col);
@@ -1619,6 +1660,30 @@ function sync() {
     return db.sync(remoteURL);
 }
 
+// function syncToProd() {
+//     setButtonDisable("syncToProd", true);
+//     db.sync(remoteURLProd).on('complete', function () {
+//         console.log("sync to PROD completed");
+//         alert("同步成功！");
+//         setButtonDisable("syncToProd", false);
+//     }).on('error', function (err) {            
+//         alert("同步失败: " + err);
+//         setButtonDisable("syncToProd", false);
+//     });
+// }
+
+function xlSyncToProd() {
+    setButtonDisable("syncToProd", true);
+    db.replicate.to(remoteURLProd).on('complete', function () {
+        console.log("sync to PROD completed");
+        alert("同步成功！");
+        setButtonDisable("syncToProd", false);
+    }).on('error', function (err) {            
+        alert("同步失败: " + err);
+        setButtonDisable("syncToProd", false);
+    });
+}
+
 /**
  * Sends request for images.
  */
@@ -1773,7 +1838,7 @@ function showImagesFromDB(data)
 
             form.append(desc);
 
-            var hiddenImg = '<img style="display:none;" src="' + data.images[i].src + '">'
+            var hiddenImg = '<img style="display:none;" src="' + src + '">'
 
             form.append(hiddenImg);
 
