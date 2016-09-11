@@ -19,7 +19,8 @@
       <script src="js/progressbar.js"></script>
       <script src="js/modal.js"></script>
       <script src="js/sha1.js"></script>
-	    <script src="js/script_7_30.js"></script>     
+      <script src="js/q.js"></script>
+	    <script src="js/bundle_9_11.js"></script>     
 </head>
 <body>
 	<div class="container-fluid">
@@ -58,30 +59,25 @@
                 </button>    
             </div>    -->
             <div class="form-group">     
-                <button type="button" class="btn btn-primary .btn-xs form-control" id="addNews" onclick="createNews()">
+                <button type="button" class="btn btn-primary .btn-xs form-control" id="addNews">
                     Add News
                 </button>    
             </div>   
             <div class="form-group">     
-                <button type="button" class="btn btn-primary .btn-xs form-control" id="showPost" onclick="xlshowPost()">
+                <button type="button" class="btn btn-primary .btn-xs form-control" id="showPost">
                     Generate Post
                 </button>    
             </div>   
             <div class="form-group">     
-                <button type="button" class="btn btn-primary .btn-xs form-control" id="syncToProd" onclick='xlSyncToProd()'>
+                <button type="button" class="btn btn-primary .btn-xs form-control" id="syncToProd">
                      Sync To PRO
-               </button>    
+                </button>    
             </div> 
             <!-- <div class="form-group">
                 <button type="button" class="btn btn-primary .btn-xs form-control" data-toggle="modal" data-target="#clipUpdateModal" id="updateClip">
                     Update Clip
                 </button>    
-            </div> 
-            <div class="form-group">     
-                <button type="button" class="btn btn-primary .btn-xs form-control"onclick="addSortableItem()">
-                   Test
-                </button>    
-            </div>        -->      
+            </div> -->      
         </form>
     </div>
     <div class="container-fluid">
@@ -128,7 +124,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" id="save-player" onclick="savePlayer()">Save</button>
+                    <button type="button" class="btn btn-primary" id="save-player">Save</button>
                 </div>
             </div><!-- /.modal-content -->
         </div><!-- /.modal-dialog -->
@@ -181,13 +177,13 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" id="save-clip" onclick="saveSingleClip()">Save</button>
+                    <button type="button" class="btn btn-primary" id="save-clip">Save</button>
                 </div>
             </div><!-- /.modal-content -->
         </div><!-- /.modal-dialog -->
     </div><!-- /.modal -->
 
-    <div class="modal fade" id="clipUpdateModal">
+    <!-- <div class="modal fade" id="clipUpdateModal">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -203,37 +199,7 @@
                           <input class="form-control" id="name_search" required>
                         </div>
                       </div>
-                      <div id="searchResult">
-                        <!-- <table class="table">
-                          <thead>
-                            <tr>
-                              <th>#</th>
-                              <th>球员</th>
-                              <th>动作</th>
-                              <th>描述</th>
-                              <th>图片</th>
-                              <th>选择</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <tr>
-                              <th scope="row">1</th>
-                              <td>MJ</td>
-                              <td>投篮</td>
-                              <td>最好的投篮</td>
-                              <td>http://bac.com/1.gif</td>
-                              <td><a href="#" onclick="updateClip();return false;">修改</a></td>
-                            </tr>
-                            <tr>
-                              <th scope="row">2</th>
-                              <td>Kobe</td>
-                              <td>运球</td>
-                              <td>胯下运球</td>
-                              <td>http://bac.com/1.gif</td>
-                              <td><a href="#" onclick="updateClip();return false;">修改</a></td>
-                            </tr>                         
-                          </tbody>
-                        </table> -->
+                      <div id="searchResult">                       
                       </div>
                     </form>
 
@@ -272,13 +238,11 @@
                         <button type="button" class="btn btn-default btn-xs" style="float: right; margin-right: 15px;" onclick="prepareUpdate('update')">更新</button>
                         <button type="button" class="btn btn-default btn-xs" style="float: right; margin-right: 5px;" onclick="prepareUpdate('delete')">删除</button>                                    
                       </div>
-                      <div class="alert alert-danger alert-dismissible fade in hide" role="alert">
-                        <!-- <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span></button> -->
+                      <div class="alert alert-danger alert-dismissible fade in hide" role="alert">                        
                          <span id="alert-message" style="margin-right: 1em;"></span>
                          <button type="button" class="btn btn-danger btn-xs" onclick="performUpdate()">确认</button>
                           <button type="button" class="btn btn-default btn-xs" onclick="dimissAlert()">取消</button>
-                        <p style="text-align: right;" class="clearfix">
-                         
+                        <p style="text-align: right;" class="clearfix">                         
                         </p>
                       </div>                                      
                     </form>
@@ -287,11 +251,11 @@
                     <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                     <button type="button" class="btn btn-primary" id="save-clip-update" onclick="searchClip()">Search</button>
                 </div>
-            </div><!-- /.modal-content -->
-        </div><!-- /.modal-dialog -->
-    </div><!-- /.modal -->
+            </div>
+        </div>
+    </div> -->
 
-    <div class="modal fade" id="playsModal">
+    <!-- <div class="modal fade" id="playsModal">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -355,11 +319,11 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" id="save-clip" onclick="savePlay()">Save</button>
+                    <button type="button" class="btn btn-primary" id="save-clip-play" onclick="savePlay()">Save</button>
                 </div>
-            </div><!-- /.modal-content -->
-        </div><!-- /.modal-dialog -->
-    </div><!-- /.modal -->
+            </div>
+        </div>
+    </div> -->
 
      <div class="modal fade" id="pushModal">
         <div class="modal-dialog">
@@ -393,9 +357,10 @@
                     </form>             
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" id="search-images" onclick="searchImages()">查看图片</button>
+                    <button type="button" class="btn btn-primary" id="delete-news">删除新闻</button>
+                    <button type="button" class="btn btn-primary" id="search-images">查看图片</button>
                     <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>                    
-                    <button type="button" class="btn btn-primary" id="submit-push" onclick="submitPush()">发送</button>
+                    <button type="button" class="btn btn-primary" id="submit-push">发送</button>
                 </div>
             </div><!-- /.modal-content -->
         </div><!-- /.modal-dialog -->

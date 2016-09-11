@@ -82,11 +82,158 @@ $(function()
         searchWeibo = true;
     });    
 
+    $('#syncToProd').click(function(){
+        syncToProd();
+    });     
+
+    $('#addNews').click(function(){
+        createNews();
+    });    
+
+    $('#addNews').click(function(){
+        createNews();
+    }); 
+
+    $('#showPost').click(function(){
+        showPost();
+    }); 
+
+    $('#save-player').click(function(){
+        savePlayer();
+    }); 
+
+    $('#save-clip').click(function(){
+        saveSingleClip();
+    }); 
+
+    $('#delete-news').click(function(){
+        deleteNews();
+    }); 
+
+    $('#search-images').click(function(){
+        searchImages();
+    });
+
+    $('#submit-push').click(function(){
+        submitPush();
+    }); 
+
     // $("#search-images").click(function(){
     //     searchImages();
     // });
     // setHeader();
 });
+
+var dataBase = {    
+    dbStaging: new PouchDB(remoteURL),
+    lastSeqID: "_local/lastSyncSeqNo",
+    
+    updateLBPostData: function() {
+        var deferred = Q.defer();
+
+        var that = this;
+
+        this.getLastSeq().then(function(result){
+            return that.dbStaging.changes({
+                since: result.seq,
+                include_docs: true,
+                filter: function (doc) {
+                    return (startWith(doc._id, "news") || 
+                            startWith(doc._id, "galery") ||
+                            startWith(doc._id, "post")
+                            );
+                }
+            });
+        }).then(function (result) {
+            if(result.results.length == 0) {
+                return true;
+            }else{
+                return that.updateViaRestAPI(result.results);
+            }            
+        }).then(function(){
+            deferred.resolve(true);
+        }).catch(function (err) {
+            deferred.reject(err);
+        });
+
+        return deferred.promise;
+    },
+    
+    saveLastSeq: function(seq){
+        var deferred = Q.defer();
+
+        if(!seq) deferred.reject("seq is null");
+
+        var that = this;
+
+        this.dbStaging.get(this.lastSeqID).then(function(doc) {        
+            doc.seq = seq;
+            return that.dbStaging.put(doc);
+        }).then(function(response) {
+            deferred.resolve(response);
+        }).catch(function (err) {
+            deferred.reject(err);
+        });   
+
+        return deferred.promise;
+    },
+
+    createLastSeq: function(seq){
+        return this.dbStaging.put({
+            _id: this.lastSeqID,
+            seq: seq
+        });
+    },
+
+    getLastSeq: function(){
+        return this.dbStaging.get(this.lastSeqID);
+    },
+
+    updateViaRestAPI: function(postData){
+        var rest = require('rest');
+        var mime = require('rest/interceptor/mime');
+        var client = rest.wrap(mime);
+
+        var reqeust = {
+            method: "POST",
+            path: "http://121.40.197.226:3001/api/posts/updatePostClip",
+            headers: {'Content-Type': 'application/json'},        
+            entity: {postData: postData},
+        };
+
+        return client(reqeust);
+    },  
+};
+
+function syncToProd() {
+    setButtonDisable("syncToProd", true);
+
+    dataBase.updateLBPostData().then(function(){
+        return dataBase.dbStaging.replicate.to(remoteURLProd);
+    }).then(function(result){
+        return dataBase.saveLastSeq(result.last_seq);
+    }).then(function(){
+        console.log("sync to PROD completed");
+        alert("同步成功！");
+        setButtonDisable("syncToProd", false);
+    }).catch(function(err){
+        alert("同步失败！");
+        setButtonDisable("syncToProd", false);
+    });
+
+    // db.replicate.to(remoteURLProd).on('complete', function () {
+    //     console.log("sync to PROD completed");
+    //     alert("同步成功！");
+    //     setButtonDisable("syncToProd", false);
+    // }).on('error', function (err) {            
+    //     alert("同步失败: " + err);
+    //     setButtonDisable("syncToProd", false);
+    // });
+}
+
+function startWith(string, needle){
+    return string.lastIndexOf(needle, 0) === 0;
+}
 
 function jsonp(url, callback) {
     var callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
@@ -703,13 +850,18 @@ function generatePlay(name, desc, cat, level, thumb, url1, url2) {
     };   
 }
 
-function generatePost(player, move, list) {
+function generatePost(player, move, image, desc) {
 
     var id = getPostID(player, move);
 
     return {
         "_id": id,        
-        "image": list,        
+        "image": [
+            {
+                desc: desc, 
+                url: image    
+            }
+        ]
     };
 }
 
@@ -727,7 +879,7 @@ function putClip(player, move, image, desc, sCallback, fCallback) {
 
         var doc = {};
         if(result.rows.length == 0) {
-            doc = generatePost(player, move, [image]);
+            doc = generatePost(player, move, image, desc);
         }else {
             doc = result.rows[0].doc;
 
@@ -774,7 +926,8 @@ function putClip(player, move, image, desc, sCallback, fCallback) {
         sCallback(image);
     }).catch(function(err) {
         if(err.message == "Already existed") {
-            sCallback(image);
+            fCallback();
+            alert("同球星动作下已存在，不需重复保存");                  
         }else {
             fCallback();
             alert("保存失败: " + err);                  
@@ -1231,7 +1384,7 @@ function renderNewsForm() {
     });
 }
 
-function xlshowPost() {
+function showPost() {
 	
 	var postText = "";
 
@@ -1672,23 +1825,10 @@ function sync() {
 //     });
 // }
 
-function xlSyncToProd() {
-    setButtonDisable("syncToProd", true);
-    db.replicate.to(remoteURLProd).on('complete', function () {
-        console.log("sync to PROD completed");
-        alert("同步成功！");
-        setButtonDisable("syncToProd", false);
-    }).on('error', function (err) {            
-        alert("同步失败: " + err);
-        setButtonDisable("syncToProd", false);
-    });
-}
-
 /**
  * Sends request for images.
  */
-function getImagesFromUrl()
- {
+function getImagesFromUrl() {
     $( "#dialog" ).dialog("open");
     // Make object out of form data
     var data = $(this).serializeObject();
@@ -1773,6 +1913,25 @@ function searchImages() {
     }).catch(function() {
         alert("ID不存在，请重新输入");           
     });
+}
+
+function deleteNews() {
+    var id = getValue("push_id");
+
+    if(!id || id.lastIndexOf("news_", 0) !== 0) {
+        alert("请输入有效新闻ID");   
+    }else {
+        db.get(id).then(function(doc) {
+            doc._deleted = true;
+            return db.put(doc);
+        }).then(function() {
+            return sync();            
+        }).then(function() {
+            alert("新闻已删除");
+        }).catch(function() {
+            alert("请输入有效新闻ID");           
+        });
+    }
 }
 
 function showImagesFromDB(data)
