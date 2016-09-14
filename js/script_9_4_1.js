@@ -124,6 +124,125 @@ $(function()
     // setHeader();
 });
 
+global.selectClip = function (index) {
+    //console.log(clipID);
+
+    selectedClip = index;
+    cleanActive(searchResult.length);
+
+    var clip = searchResult[index];
+
+    setInputValue('image_url_update', clip.image);
+    setInputValue('clip_title_update', clip.name);
+    setInputValue('clip_desc_update', clip.desc);
+    playerUI.update(findIndex(playerList, clip.player));
+    var moveIndex = findIndex(moveList, clip.move);
+    $('input:radio[id=radio'+moveIndex+'_update]').prop('checked', true);
+    $("#clip_move_update").buttonset( "refresh" );
+    $("#update_row_"+index).addClass("success"); 
+
+    $("#clipUpdateForm").show();
+}
+
+global.saveNews = function() {
+
+    var list = [];
+
+    var name = getValue("news_title"), 
+        desc = getValue("news_desc"),
+        thumb = getValue("news_thumb"),
+        summary = getValue("news_summary");
+
+    // $(".imageList").each(function(index, element){
+    //     //console.log($(element).attr("url"));
+    //     list.push($(element).attr("url"));
+    // });
+
+    $("#sortable2").find('li').each(function(index, element){        
+
+        var url = $(element).attr("url");
+        var desc = $(element).attr("desc");
+        if(url) {
+            // console.log($(element).attr("url"));
+            list.push({
+                url: url,
+                desc: desc
+            });   
+        }       
+    });
+
+    if (name == "" || desc == "" || thumb == "" || list.length < 2) {
+        alert("请填写完整信息并选择至少两张图片");
+        return;
+    }   
+
+    var _id = "news_" + getDateID(); 
+
+    var news = {
+        _id: _id,
+        image: list,
+        name: name,
+        desc: desc,
+        thumb: thumb,
+        summary: summary,
+    }
+
+    setInputValue("title", name);
+    setInputValue("push_id", _id);
+
+    putNews(news, function(){        
+        cleanNews();
+        $('#pushModal').modal('show');
+    });
+}
+
+global.cleanNews = function () {
+    localStorage["clips"] = [];
+    $('.row').empty();
+    updateNewsButton();
+}
+
+global.cancelClip = function (index) {
+    $("#clip"+index)
+    .parents(".clip")
+    .animate({opacity: 0})
+    .toggle();   
+}
+
+global.saveClip = function (index) {
+
+    setButtonDisable("save"+index, true);
+
+    var move = getSeletValue("move"+index); 
+    var player = getValue("player"+index);
+    var image = getValue("gif"+index);
+    var desc = getValue("desc"+index);
+
+    // return;
+    // var name = getValue("name"+index);
+    
+    setStorage(image, desc);
+    updateNewsButton();
+
+    if(!needSaveClipForPlayer(index)) {
+        saveSucess(index);
+        setButtonDisable("save"+index, false);        
+        return;
+    }
+
+    putClip(player, move, image, desc, function(){
+        saveSucess(index);
+        setButtonDisable("save"+index, false);
+    }, function() {        
+        setButtonDisable("save"+index, false);
+    });
+}
+
+global.clipOption = function(i) {
+    // alert("");
+    setClipOption(i);
+}
+
 var dataBase = {    
     dbStaging: new PouchDB(remoteURL),
     lastSeqID: "_local/lastSyncSeqNo",
@@ -740,50 +859,8 @@ function createNews() {
     }
 }
 
-function cleanNews() {
-    localStorage["clips"] = [];
-    $('.row').empty();
-    updateNewsButton();
-}
-
 function endsWith(string, suffix) {
     return string.indexOf(suffix, string.length - suffix.length) !== -1
-}
-
-function cancelClip(index) {
-    $("#clip"+index)
-    .parents(".clip")
-    .animate({opacity: 0})
-    .toggle();   
-}
-
-function saveClip(index) {
-
-    setButtonDisable("save"+index, true);
-
-    var move = getSeletValue("move"+index); 
-    var player = getValue("player"+index);
-    var image = getValue("gif"+index);
-    var desc = getValue("desc"+index);
-
-    // return;
-    // var name = getValue("name"+index);
-    
-    setStorage(image, desc);
-    updateNewsButton();
-
-    if(!needSaveClipForPlayer(index)) {
-        saveSucess(index);
-        setButtonDisable("save"+index, false);        
-        return;
-    }
-
-    putClip(player, move, image, desc, function(){
-        saveSucess(index);
-        setButtonDisable("save"+index, false);
-    }, function() {        
-        setButtonDisable("save"+index, false);
-    });
 }
 
 function savePlay() {
@@ -1062,26 +1139,6 @@ function findIndex(array, id) {
         }
     }
     return -1;
-}
-
-function selectClip(index) {
-    //console.log(clipID);
-
-    selectedClip = index;
-    cleanActive(searchResult.length);
-
-    var clip = searchResult[index];
-
-    setInputValue('image_url_update', clip.image);
-    setInputValue('clip_title_update', clip.name);
-    setInputValue('clip_desc_update', clip.desc);
-    playerUI.update(findIndex(playerList, clip.player));
-    var moveIndex = findIndex(moveList, clip.move);
-    $('input:radio[id=radio'+moveIndex+'_update]').prop('checked', true);
-    $("#clip_move_update").buttonset( "refresh" );
-    $("#update_row_"+index).addClass("success"); 
-
-    $("#clipUpdateForm").show();
 }
 
 function cleanActive(length) {
@@ -1505,58 +1562,6 @@ function finishAdd(image) {
         .animate({opacity: 1});
 }
 
-function saveNews() {
-
-    var list = [];
-
-    var name = getValue("news_title"), 
-        desc = getValue("news_desc"),
-        thumb = getValue("news_thumb"),
-        summary = getValue("news_summary");
-
-    // $(".imageList").each(function(index, element){
-    //     //console.log($(element).attr("url"));
-    //     list.push($(element).attr("url"));
-    // });
-
-    $("#sortable2").find('li').each(function(index, element){        
-
-        var url = $(element).attr("url");
-        var desc = $(element).attr("desc");
-        if(url) {
-            // console.log($(element).attr("url"));
-            list.push({
-                url: url,
-                desc: desc
-            });   
-        }       
-    });
-
-    if (name == "" || desc == "" || thumb == "" || list.length < 2) {
-        alert("请填写完整信息并选择至少两张图片");
-        return;
-    }   
-
-    var _id = "news_" + getDateID(); 
-
-    var news = {
-        _id: _id,
-        image: list,
-        name: name,
-        desc: desc,
-        thumb: thumb,
-        summary: summary,
-    }
-
-    setInputValue("title", name);
-    setInputValue("push_id", _id);
-
-    putNews(news, function(){        
-        cleanNews();
-        $('#pushModal').modal('show');
-    });
-}
-
 function putNews(news, callback) {
     db.put(news).then(function(){
         sync().on('complete', function () {
@@ -1760,16 +1765,11 @@ function getImagesFromUrlDone(data)
 
             // form.append(buttons);
             
-            //if(i==3) break;
+            // if(i==1) break;
         }
     }
 
     Gifffer(display);
-}
-
-function clipOption(i) {
-    // alert("");
-    setClipOption(i);
 }
 
 function display(image) {
