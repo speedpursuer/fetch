@@ -44,7 +44,16 @@ class ImageFinder
                         $this->base = $this->url;
         }
 
-
+        public function get_title()
+        {
+            $nodes = $this->document->getElementsByTagName('title');            
+            if(!$nodes || !$nodes->item(0)){
+                return "";
+            }else{
+            	$title = $nodes->item(0)->nodeValue;            	
+                return $title;
+            }            
+        } 
         /**
          * Returns an array with all the images found.
          */
@@ -61,6 +70,28 @@ class ImageFinder
                 {
 
                         $src = $img->getAttribute('data-url')? $img->getAttribute('data-url'): $img->getAttribute('src');
+                        
+                        // Extract what we want
+                        $image = array
+                        (
+                                'src' => self::make_absolute($src, $this->base),
+                        );
+                        
+                        // Skip images without src
+                        if( ! $image['src'])
+                                continue;
+
+                        // Add to collection. Use src as key to prevent duplicates.
+                        $images[$image['src']] = $image;
+                }
+
+                foreach($this->document->getElementsByTagName('a') as $img)
+                {
+                        $src = $img->getAttribute('href');
+
+                        if(stripos($src, '.gif') === FALSE) {
+                            continue;
+                        }
                         
                         // Extract what we want
                         $image = array
@@ -96,9 +127,11 @@ class ImageFinder
                         
                         CURLOPT_RETURNTRANSFER => TRUE,
                         CURLOPT_HEADER => FALSE,
+//                         CURLOPT_SSL_VERIFYPEER => FALSE,
+//                         CURLOPT_SSL_VERIFYHOST => FALSE,                       
                         
                         CURLOPT_SSL_VERIFYPEER => TRUE,
-                        CURLOPT_CAINFO => 'cacert.pem',
+                        CURLOPT_CAINFO => dirname(__FILE__).'/cacert.pem',
 
                         CURLOPT_FOLLOWLOCATION => TRUE,
                         CURLOPT_MAXREDIRS => 10,
@@ -108,9 +141,9 @@ class ImageFinder
                 //curl_setopt($request, CURLOPT_COOKIEJAR, "cookies.txt");
                 
                 $response = curl_exec($request);
-                //$err = curl_error($request);
-                //print_r($err);
-                //print_r($response);
+//                 $err = curl_error($request);
+//                 print_r($err);
+//                 print_r($response);
                 curl_close($request);
 
                 // Create DOM document

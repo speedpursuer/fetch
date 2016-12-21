@@ -15,15 +15,15 @@ if($forWeibo=="false") {
 	// Create image finder
 	include('image_finder.class.php');
 	$finder = new ImageFinder($url);
-	
-	
+		
 	// Get images
 	$images = $finder->get_images();
 	
+	$title = $finder->get_title();
 	
 	// Output result
-	$result = array('images' => $images);
-	ob_start('ob_gzhandler');
+	$result = array('images' => $images, 'title' => $title);
+	// ob_start('ob_gzhandler');
 	echo json_encode($result);
 }else{
 	// Create image finder

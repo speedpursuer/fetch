@@ -71,7 +71,7 @@ class ImageFinderWeibo
                         CURLOPT_HEADER => FALSE,
                         
                         CURLOPT_SSL_VERIFYPEER => TRUE,
-                        CURLOPT_CAINFO => 'cacert.pem',
+                        CURLOPT_CAINFO => dirname(__FILE__).'/cacert.pem',
 
                         CURLOPT_FOLLOWLOCATION => TRUE,
                         CURLOPT_MAXREDIRS => 10,

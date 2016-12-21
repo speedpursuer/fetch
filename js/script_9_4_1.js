@@ -1924,7 +1924,7 @@ function deleteNews() {
             return sync();            
         }).then(function() {
             alert("新闻已删除");
-        }).catch(function() {
+        }).catch(function(e) {
             alert("请输入有效新闻ID");           
         });
     }
