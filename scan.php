@@ -15,16 +15,7 @@ if($forWeibo=="false") {
 	// Create image finder
 	include('image_finder.class.php');
 	$finder = new ImageFinder($url);
-		
-	// Get images
-	$images = $finder->get_images();
-	
-	$title = $finder->get_title();
-	
-	// Output result
-	$result = array('images' => $images, 'title' => $title);
-	// ob_start('ob_gzhandler');
-	echo json_encode($result);
+	$finder->fetchGIF();	
 }else{
 	// Create image finder
 	include('weibo_image_finder.class.php');
