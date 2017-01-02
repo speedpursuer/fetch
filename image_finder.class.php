@@ -46,7 +46,15 @@ class ImageFinder
 
         public function fetchGIF() {
          
-            if($this->isWebsiteOf($this->url, '.weibo.')) {
+        	if($this->endsWith($this->url, '.jpg')) {
+        		$images[0] = array
+        		(
+        			'src' => $this->url,
+        		);
+        	
+        		$result = array('images' => $images, 'title' => 'Single image');
+        		echo json_encode($result);
+        	}else if($this->isWebsiteOf($this->url, '.weibo.')) {
             	$path = '/opt/phantomjs/';
                 $result = exec($path.'bin/phantomjs '.$path.'weibo.js '.$this->url);
                 echo $result;
@@ -55,10 +63,7 @@ class ImageFinder
                 $title = $this->get_title();
         
                 // Output result
-                $result = array('images' => $images, 'title' => $title);
-                
-                $json = json_encode($result);
-
+                $result = array('images' => $images, 'title' => $title);                
                 echo json_encode($result);    
             }
         }
@@ -93,6 +98,8 @@ class ImageFinder
                		$this->getImageForHupu($images);
                	}else if($this->isWebsiteOf($this->url, 'm.pstatp.com')){
                     $this->getImageForToutiao($images);
+                }else if($this->isWebsiteOf($this->url, 'baidu.com')) {
+                    $this->getImageForBaidu($images);
                 }else{
                		$this->getImageForOthers($images);
                	}         	               
@@ -101,11 +108,52 @@ class ImageFinder
                 return array_values($images);
         }
         
+        private function startsWith($haystack, $needle)
+        {
+        	$length = strlen($needle);
+        	return (substr($haystack, 0, $length) === $needle);
+        }
+        
+        private function endsWith($haystack, $needle)
+        {
+        	$length = strlen($needle);
+        	if ($length == 0) {
+        		return true;
+        	}
+        
+        	return (substr($haystack, -$length) === $needle);
+        }
+        
         private function isWebsiteOf($url, $key) {
         	if(stripos($url, $key) === FALSE) {
         		return false;
         	}
         	return true;
+        }
+
+        private function getImageForBaidu(&$images) {
+            foreach($this->document->getElementsByTagName('img') as $img)
+            {
+                 
+                $src = $img->getAttribute('data-src')? $img->getAttribute('data-src'): $img->getAttribute('src');
+        
+                // if(stripos($src, 'large') === FALSE) {
+                //     continue;
+                // }
+                 
+                // Extract what we want
+                $image = array
+                (
+                    'src' => self::make_absolute($src, $this->base),
+                );
+                 
+                // Skip images without src
+                if( ! $image['src'])
+                    continue;
+                 
+                // Add to collection. Use src as key to prevent duplicates.
+                $images[$image['src']] = $image;
+            }
         }
 
         private function getImageForToutiao(&$images) {

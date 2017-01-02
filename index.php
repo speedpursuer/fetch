@@ -20,7 +20,7 @@
       <script src="js/modal.js"></script>
       <script src="js/sha1.js"></script>
       <script src="js/q.js"></script>
-	    <script src="js/bundle_10_11.js"></script>     
+	    <script src="js/bundle_1_2.js"></script>     
 </head>
 <body>
 	<div class="container-fluid">
@@ -73,6 +73,11 @@
                      Sync To PRO
                 </button>    
             </div> 
+            <div class="form-group">
+                <button type="button" class="btn btn-primary .btn-xs form-control" data-toggle="modal" data-target="#ShowClipsModal" id="showClips">
+                    Show Clips
+                </button>      
+            </div>
             <!-- <div class="form-group">
                 <button type="button" class="btn btn-primary .btn-xs form-control" data-toggle="modal" data-target="#clipUpdateModal" id="updateClip">
                     Update Clip
@@ -125,6 +130,31 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                     <button type="button" class="btn btn-primary" id="save-player">Save</button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+
+    <div class="modal fade" id="ShowClipsModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">Show Clips</h4>
+                </div>
+                <div class="modal-body">
+                    <form class="form-horizontal" id="showClipsForm">
+                      <div class="form-group">
+                        <label for="clipList" class="col-sm-2 control-label">Clip List</label>
+                        <div class="col-sm-10">
+                          <textarea class="form-control" id="clipList" required></textarea>
+                        </div>
+                      </div>                                        
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="show-clips">show</button>
                 </div>
             </div><!-- /.modal-content -->
         </div><!-- /.modal-dialog -->
