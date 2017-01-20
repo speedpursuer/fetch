@@ -22,32 +22,80 @@ function waitFor(testFx, onReady, timeOutMillis) {
         }, 250); //< repeat check every 250ms
 };
 
-function fetchGIF() {
+function fetchGIF() {    
     var images = page.evaluate(function() {
+        // var getURL = function(img) {          
+        //   var imgNames = ["data-large", "src"];          
+        //   for(var i = 0; i < imgNames.length; i++) {            
+        //     var value = img.getAttribute(imgNames[i]);
+        //     if(value) {
+        //       return value;
+        //     }
+        //   }          
+        //   return null;
+        // };
+        // var isValidURL = function(url) {
+        //   var inclusiveKeys = ["http", ".gif"];
+        //   var exclusiveKeys = [];
+        //   for(key in inclusiveKeys) {
+        //     if(url.indexOf(key) === -1){
+        //       return false;
+        //     }
+        //   }
+
+        //   for(key in exclusiveKeys) {
+        //     if(url.indexOf(key) !== -1){
+        //       return false;
+        //     }
+        //   }        
+        //   return true;  
+        // };
+        // var convertURL = function(url) {
+        //   var keywords = ["thumb180", "thumb300", "wap180", "orj360"];
+        //   for(key in keywords) {
+        //     src = src.replace(key, "large");
+        //   }
+        //   return src
+        // }
+
+        // var imgNames = ["data-large", "src"];          
+        // var inclusiveKeys = ["http", ".gif"];
+        // var exclusiveKeys = [];
         var result = [];
-        var list = document.getElementsByTagName("img");
-        for(var i = 0; i < list.length; i++) {
-            var src = list[i].getAttribute('src');
-            if(src) {
-                if(src.indexOf('.gif') === -1) {
-                    continue;
-                }
+        var list = document.getElementsByTagName("img");        
+        for(var i = 0; i < list.length; i++) {                      
+            
+            // Two types weibo
+            var dataLarge = list[i].getAttribute('data-large');            
+            var src = dataLarge? dataLarge: list[i].getAttribute('src');
 
-                src = src.replace(/thumb180/, "large");
-                src = src.replace(/wap180/, "large");
+            if(!src) {
+              return;
+            }            
 
-                // if(src.indexOf('thumb180') !== -1) {
-                //     src = src.replace(/thumb180/, "large")
-                // }
-                result.push({"src": src});
+            //Validation
+            if(src.indexOf('http') === -1) {
+              continue;
             }
+            if(src.indexOf('.gif') === -1) {
+              continue;
+            }
+
+            //Replace thumb with large
+            src = src.replace(/thumb180/, "large");
+            src = src.replace(/thumb300/, "large");
+            src = src.replace(/wap180/, "large");
+            src = src.replace(/orj360/, "large");
+
+            //Add finally
+            result.push({"src": src});        
         }
         return JSON.stringify({"images": result, "title": "新浪微博"});
     });
 
     console.log(images);
     phantom.exit();
-}
+};
 
 var page = require('webpage').create(),
     system = require('system'),
@@ -127,13 +175,15 @@ page.open(url, function (status) {
         console.log("Unable to access network");
         phantom.exit();
     } else {
+        // var content = page.content;
+        // console.log('Content: ' + content);
         // Wait for 'signin-dropdown' to be visible
         waitFor(function() {
             // Check in the page if a specific element is now visible
             return page.evaluate(function() {
-                return document.getElementsByClassName('loaded').length > 0;
+                // return document.getElementsByClassName('loaded').length > 0;
                 // return document.getElementsByClassName('gif').length > 0;
-                // return document.getElementsByTagName("div").length > 0;
+                return document.getElementsByTagName("img").length > 0;
                 // return document.getElementsByTagName("media-pic-list").length > 0;                
                 // return $("#signin-dropdown").is(":visible");
             });

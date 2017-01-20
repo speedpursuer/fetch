@@ -12,6 +12,9 @@ class ImageFinder
         private $document;
         private $url;
         private $base;
+        private $imgNames;
+        private $inclusiveKeys;
+        private $exclusiveKeys;
 
 
         /**
@@ -21,6 +24,9 @@ class ImageFinder
         {
                 // Store url
                 $this->url = $url;
+                $this->imgNames = array("data-gif", "data-url","data-echo","src");
+                $this->inclusiveKeys = array(".gif");
+                $this->exclusiveKeys = array("user", "smile");
         }
 
 
@@ -56,7 +62,7 @@ class ImageFinder
         		echo json_encode($result);
         	}else if($this->isWebsiteOf($this->url, '.weibo.')) {
             	$path = '/opt/phantomjs/';
-                $result = exec($path.'bin/phantomjs '.$path.'weibo.js '.$this->url);
+                $result = exec($path.'bin/phantomjs '.dirname(__FILE__).'/weibo.js '.$this->url);
                 echo $result;
             }else {
                 $images = $this->get_images();
@@ -92,9 +98,9 @@ class ImageFinder
                 // For hupu.com and others
                 if($this->isWebsiteOf($this->url, '163.com')) {
                 	$this->getImageFor163($images);
-                }else if ($this->isWebsiteOf($this->url, 'm.hupu.com')) {
-               		$this->getImageForHupuMobile($images);
-               	}else if ($this->isWebsiteOf($this->url, 'bbs.hupu.com')){
+//                 }else if ($this->isWebsiteOf($this->url, 'm.hupu.com')) {
+//                		$this->getImageForHupuMobile($images);
+               	}else if ($this->isWebsiteOf($this->url, 'hupu.com')){
                		$this->getImageForHupu($images);
                	}else if($this->isWebsiteOf($this->url, 'm.pstatp.com')){
                     $this->getImageForToutiao($images);
@@ -206,15 +212,37 @@ class ImageFinder
         	}
         }
         
+//         private function getImageForHupuMobile(&$images) {
+//         	foreach($this->document->getElementsByTagName('a') as $img)
+//         	{
+//         		$src = $img->getAttribute('data-echo')? $img->getAttribute('data-echo'): $img->getAttribute('src');
+//         		$src = $img->getAttribute('href');
+        
+//         		if(stripos($src, '.gif') === FALSE) {
+//         			continue;
+//         		}
+        
+//         		// Extract what we want
+//         		$image = array
+//         		(
+//         				'src' => self::make_absolute($src, $this->base),
+//         		);
+        
+//         		// Skip images without src
+//         		if( ! $image['src'])
+//         			continue;
+        
+//         		// Add to collection. Use src as key to prevent duplicates.
+//         		$images[$image['src']] = $image;
+//         	}
+//         }
+        
         private function getImageForHupu(&$images) {
         	foreach($this->document->getElementsByTagName('img') as $img)
-        	{
-        	
-        		$src = $img->getAttribute('data-url')? $img->getAttribute('data-url'): $img->getAttribute('src');
-
-        		if(stripos($src, '.gif') === FALSE) {
-        			continue;
-        		}
+        	{      
+				$src = $this->getURLFromImg($img);
+				
+				if(!$this->filterURL($src)) continue;
         	
         		// Extract what we want
         		$image = array
@@ -254,32 +282,39 @@ class ImageFinder
         		// Add to collection. Use src as key to prevent duplicates.
         		$images[$image['src']] = $image;
         	}
+        }              
+        
+        private function getURLFromImg($img) {
+        	        	
+        	foreach($this->imgNames as $name) {        	
+        		$value = $img->getAttribute($name);
+        		if($value) {
+        			if($this->startsWith($value, "//")) {
+        				return "http:" . $value; 
+        			}
+        			return $value;
+        		}
+        	}
+        	return null;   	     
         }
         
-        private function getImageForHupuMobile(&$images) {
-        	foreach($this->document->getElementsByTagName('a') as $img)
-            {
-            	$src = $img->getAttribute('href');
-
-                if(stripos($src, '.gif') === FALSE) {
-                	continue;
-                }
-                        
-                // Extract what we want
-                $image = array
-                (
-                	'src' => self::make_absolute($src, $this->base),
-                );
-                    
-                // Skip images without src
-                if( ! $image['src'])
-                	continue;
-
-                // Add to collection. Use src as key to prevent duplicates.
-                $images[$image['src']] = $image;
-            }
+        private function filterURL($url) {
+        	
+        	foreach($this->inclusiveKeys as $key) {        		
+        		if(stripos($url, $key) === FALSE) {
+        			return false;
+        		}
+        	}
+        	
+        	foreach($this->exclusiveKeys as $key) {
+        		if(stripos($url, $key) !== FALSE) {
+        			return false;
+        		}
+        	}
+        	
+        	return true;
         }
-		
+        
         /**
          * Gets the html of a url and loads it up in a DOMDocument.
          */
