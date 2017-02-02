@@ -58,7 +58,7 @@ class ImageFinder
         			'src' => $this->url,
         		);
         	
-        		$result = array('images' => $images, 'title' => 'Single image');
+        		$result = array('images' => $images, 'title' => '');
         		echo json_encode($result);
         	}else if($this->isWebsiteOf($this->url, '.weibo.')) {
             	$path = '/opt/phantomjs/';
@@ -356,8 +356,8 @@ class ImageFinder
                 if($response)
                 {
                         libxml_use_internal_errors(true);
-                        $searchPage = mb_convert_encoding($response, 'HTML-ENTITIES', "gb2312");
-                        $document->loadHTML($searchPage);                        
+//                         $searchPage = mb_convert_encoding($response, 'HTML-ENTITIES', "gb2312");
+                        $document->loadHTML($response);                        
                        	//print_r($document->saveHTML());          
                         libxml_clear_errors();
                 }

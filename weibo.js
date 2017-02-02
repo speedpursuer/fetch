@@ -90,7 +90,7 @@ function fetchGIF() {
             //Add finally
             result.push({"src": src});        
         }
-        return JSON.stringify({"images": result, "title": "新浪微博"});
+        return JSON.stringify({"images": result, "title": ""});
     });
 
     console.log(images);
