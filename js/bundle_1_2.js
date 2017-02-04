@@ -1621,6 +1621,8 @@ function getImagesFromUrlDone(data)
 
     postContent = "";
 
+    var imageJSON = "";
+
     if(data && data.images) {
 
         var selectedPlayer = getValue("player_name");
@@ -1757,6 +1759,8 @@ function getImagesFromUrlDone(data)
             var hiddenImg = '<img style="display:none;" src="' + data.images[i].src + '">'
 
             form.append(hiddenImg);
+                    
+            imageJSON += JSON.stringify(getJSONForImage(src)) + ",\n";
 
             // var select = '<div class="form-group">' +
             //                 '<div class="checkbox">' +
@@ -1782,6 +1786,8 @@ function getImagesFromUrlDone(data)
             // if(i==1) break;
         }
     }
+    
+    console.log(imageJSON);
 
     Gifffer(display);
 }
@@ -2020,6 +2026,13 @@ function showImagesFromDB(data)
     }
 
     Gifffer(display);
+}
+
+function getJSONForImage(src) {
+    return {
+      "desc": "",
+      "url": src
+    };
 }
 
 function saveImageAs(i) {

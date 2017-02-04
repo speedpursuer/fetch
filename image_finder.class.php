@@ -75,12 +75,12 @@ class ImageFinder
         }
 
         public function get_title()
-        {
+        {        	
             $nodes = $this->document->getElementsByTagName('title');            
             if(!$nodes || !$nodes->item(0)){
                 return "";
             }else{
-            	$title = $nodes->item(0)->nodeValue;            	
+            	$title = $nodes->item(0)->nodeValue;
                 return $title;
             }            
         } 
@@ -356,9 +356,10 @@ class ImageFinder
                 if($response)
                 {
                         libxml_use_internal_errors(true);
-//                         $searchPage = mb_convert_encoding($response, 'HTML-ENTITIES', "gb2312");
-                        $document->loadHTML($response);                        
-                       	//print_r($document->saveHTML());          
+//                         $searchPage = mb_convert_encoding($response, 'HTML-ENTITIES', "gb2312");                        
+                        $response = '<meta http-equiv="Content-Type" content="text/html;charset=utf-8">' . $response;
+                        $document->loadHTML($response);
+                       	//print_r($document->saveHTML());
                         libxml_clear_errors();
                 }
                            
